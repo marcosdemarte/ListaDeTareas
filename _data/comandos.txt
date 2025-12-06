@@ -1,1 +1,4 @@
+
+#compilar y subir
+npm run build
 npm publish --regoistry=https://npm.pkg.github.com

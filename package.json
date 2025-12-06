@@ -1,12 +1,21 @@
 {
   "name": "@marcosdemarte/lista-de-tareas",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Componente React para gestionar listas de tareas con persistencia en XML",
-  "main": "src/index.js",
+  "scripts": {
+    "build": "babel src --out-dir dist"
+  },
+  "main": "dist/index.js",
   "author": "Marcos Demarte",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/marcosdemarte/ListaDeTareas.git"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.28.3",
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5"
   }
 }
