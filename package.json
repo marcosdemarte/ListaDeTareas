@@ -1,0 +1,16 @@
+{
+  "name": "@marcosbrandolin/lista-de-tareas",
+  "version": "1.0.0",
+  "description": "Componente React para gestionar listas de tareas con persistencia en XML",
+  "main": "index.js",
+  "author": "Marcos Brandolin",
+  "license": "MIT",
+  "private": false,
+  "keywords": [
+    "react",
+    "tareas",
+    "todo",
+    "xml",
+    "npm-private"
+  ]
+}

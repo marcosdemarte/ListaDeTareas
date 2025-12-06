@@ -1,0 +1,56 @@
+.lista-container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.titulo {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.form-agregar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.form-agregar input {
+  flex: 1;
+  padding: 8px;
+}
+
+.form-agregar button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.lista {
+  list-style: decimal;
+  padding-left: 20px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.item.pendiente span {
+  color: #d9534f;
+}
+
+.item.finalizado span {
+  color: #5cb85c;
+  text-decoration: line-through;
+}
+
+.item button {
+  padding: 4px 8px;
+  cursor: pointer;
+}
