@@ -1,6 +1,6 @@
 {
   "name": "@marcosdemarte/lista-de-tareas",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Componente React para gestionar listas de tareas con persistencia en XML",
   "main": "src/index.js",
   "author": "Marcos Demarte",
