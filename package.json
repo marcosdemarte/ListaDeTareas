@@ -1,16 +1,12 @@
 {
-"name": "@marcosdemarte/lista-de-tareas",
-  "version": "1.0.0",
+  "name": "@marcosdemarte/lista-de-tareas",
+  "version": "1.0.1",
   "description": "Componente React para gestionar listas de tareas con persistencia en XML",
-  "main": "index.js",
-  "author": "Marcos Brandolin",
+  "main": "src/index.js",
+  "author": "Marcos Demarte",
   "license": "MIT",
-  "private": false,
-  "keywords": [
-    "react",
-    "tareas",
-    "todo",
-    "xml",
-    "npm-private"
-  ]
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcosdemarte/ListaDeTareas.git"
+  }
 }
