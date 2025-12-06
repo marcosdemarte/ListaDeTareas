@@ -1,4 +1,12 @@
 
 #compilar y subir
 npm run build
-npm publish --regoistry=https://npm.pkg.github.com
+#subile manual una version-
+npm publish
+
+
+
+npm version patch   # 1.0.2 → 1.0.3
+npm version minor   # 1.0.2 → 1.1.0
+npm version major   # 1.0.2 → 2.0.0
+npm publish --registry=https://npm.pkg.github.com

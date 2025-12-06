@@ -1,9 +1,9 @@
 {
   "name": "@marcosdemarte/lista-de-tareas",
-  "version": "1.0.3",
+  "version": "1.0.12",
   "description": "Componente React para gestionar listas de tareas con persistencia en XML",
   "scripts": {
-    "build": "babel src --out-dir dist"
+    "build": "babel src --out-dir dist && copy src\\ListaDeTareas.css dist\\"
   },
   "main": "dist/index.js",
   "author": "Marcos Demarte",
@@ -17,5 +17,9 @@
     "@babel/core": "^7.28.5",
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-react": "^7.28.5"
+  },
+  "dependencies": {
+    "xml-js": "^1.6.11",
+    "buffer": "^6.0.3"
   }
 }

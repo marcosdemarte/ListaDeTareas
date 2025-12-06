@@ -1,3 +1,2 @@
-import ListaDeTareas from "./ListaDeTareas.jsx";
-
+import ListaDeTareas from "./ListaDeTareas";
 export default ListaDeTareas;

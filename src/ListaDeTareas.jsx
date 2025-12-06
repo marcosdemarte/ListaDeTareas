@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { xml2js, js2xml } from "xml-js";
+import { Buffer } from "buffer";
 import "./ListaDeTareas.css";
 
-export const ListaDeTareas = () => {
+const ListaDeTareas = () => {
   const [tareas, setTareas] = useState([]);
   const [nuevaTarea, setNuevaTarea] = useState("");
 
@@ -10,12 +11,27 @@ export const ListaDeTareas = () => {
   useEffect(() => {
     const xmlGuardado = localStorage.getItem("tareasXML");
     if (xmlGuardado) {
-      const json = xml2js(xmlGuardado, { compact: true });
-      const lista = json.tareas.tarea.map((t) => ({
-        texto: t._text,
-        estado: t._attributes.estado,
-      }));
-      setTareas(lista);
+      try {
+        const json = xml2js(xmlGuardado, { compact: true });
+        // Validar que exista y sea array
+        const lista = Array.isArray(json?.tareas?.tarea)
+          ? json.tareas.tarea.map((t) => ({
+              texto: t._text,
+              estado: t._attributes?.estado || "pendiente",
+            }))
+          : json?.tareas?.tarea
+          ? [
+              {
+                texto: json.tareas.tarea._text,
+                estado: json.tareas.tarea._attributes?.estado || "pendiente",
+              },
+            ]
+          : [];
+        setTareas(lista);
+      } catch (err) {
+        console.error("Error al parsear XML:", err);
+        setTareas([]);
+      }
     }
   }, []);
 
@@ -70,28 +86,31 @@ export const ListaDeTareas = () => {
       </div>
 
       <ul className="lista">
-        {tareas.map((t, i) => (
-          <li key={i} className={`item ${t.estado}`}>
-            <span>{t.texto}</span>
+        {Array.isArray(tareas) &&
+          tareas.map((t, i) => (
+            <li key={i} className={`item ${t.estado}`}>
+              <span>{t.texto}</span>
 
-            <select
-              value={t.estado}
-              onChange={(e) => cambiarEstado(i, e.target.value)}>
-              <option value="pendiente">Pendiente</option>
-              <option value="finalizado">Finalizado</option>
-            </select>
+              <select
+                value={t.estado}
+                onChange={(e) => cambiarEstado(i, e.target.value)}>
+                <option value="pendiente">Pendiente</option>
+                <option value="finalizado">Finalizado</option>
+              </select>
 
-            <button onClick={() => borrarTarea(i)}>Borrar</button>
-            <button
-              onClick={() => {
-                const nuevoTexto = prompt("Modificar tarea:", t.texto);
-                if (nuevoTexto) modificarTarea(i, nuevoTexto);
-              }}>
-              Modificar
-            </button>
-          </li>
-        ))}
+              <button onClick={() => borrarTarea(i)}>Borrar</button>
+              <button
+                onClick={() => {
+                  const nuevoTexto = prompt("Modificar tarea:", t.texto);
+                  if (nuevoTexto) modificarTarea(i, nuevoTexto);
+                }}>
+                Modificar
+              </button>
+            </li>
+          ))}
       </ul>
     </div>
   );
 };
+
+export default ListaDeTareas;
