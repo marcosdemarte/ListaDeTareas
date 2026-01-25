@@ -1,11 +1,31 @@
 LOG DE TAREAS - ListaDeTareas
 =====================================
 
-Tarea 1: Copiar README del repositorio al package
+Tarea 1: Actualizar README y publicar versión 1.0.16
 - Fecha y hora de inicio: 2026-01-25 15:30:00
-- Fecha y hora de fin: 2026-01-25 15:32:00
+- Fecha y hora de fin: 2026-01-25 15:45:00
+- Duración: 15 minutos
+
+Proceso completado:
+✓ README.md actualizado para el package npm
+✓ README_PACKAGE.md dejado vacío para el repo
+✓ Versión actualizada a 1.0.16 en package.json
+✓ Cambios commiteados y subidos al repositorio
+✓ Versión 1.0.16 publicada en GitHub Packages
+✓ Build del package ejecutado sin errores
+✓ Issues de turbopack identificados y documentados
+
+Tarea 2: Publicar nueva versión 1.0.17
+- Fecha y hora de inicio: 2026-01-25 15:46:00
+- Fecha y hora de fin: 2026-01-25 15:48:00
 - Duración: 2 minutos
 
+Proceso completado:
+✓ Versión actualizada a 1.0.17 en package.json
+✓ Versión 1.0.17 publicada en GitHub Packages
+✓ Build del package ejecutado sin errores
+✓ Cambios commiteados y subidos al repositorio
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 2 minutos
+TIEMPO TOTAL ACUMULADO: 17 minutos
 =====================================

@@ -6,6 +6,7 @@ const ListaDeTareas = () => {
   const [tareas, setTareas] = useState([]);
   const [nuevaTarea, setNuevaTarea] = useState("");
   const [draggedIndex, setDraggedIndex] = useState(null);
+  const [expandedGroups, setExpandedGroups] = useState({ pendientes: true, finalizados: true });
 
   // Cargar desde archivo XML local
   useEffect(() => {
@@ -123,6 +124,13 @@ const ListaDeTareas = () => {
     setTareas(nuevasTareas);
   };
 
+  const toggleGroup = (group) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [group]: !prev[group]
+    }));
+  };
+
   return (
     <div className="lista-container">
       <h2 className="titulo">Lista de Tareas</h2>
@@ -142,8 +150,17 @@ const ListaDeTareas = () => {
 
       <div className="grupos-container">
         <div className="grupo">
-          <h3 className="grupo-titulo">Pendientes</h3>
-          <ul className="lista">
+          <div className="grupo-header">
+            <h3 className="grupo-titulo">Pendientes</h3>
+            <button 
+              className="toggle-btn"
+              onClick={() => toggleGroup('pendientes')}
+            >
+              {expandedGroups.pendientes ? '▼' : '▶'}
+            </button>
+          </div>
+          {expandedGroups.pendientes && (
+            <ul className="lista">
             {Array.isArray(tareas) &&
               tareas
                 .filter((t) => t.estado === "pendiente")
@@ -180,12 +197,22 @@ const ListaDeTareas = () => {
                     </li>
                   );
                 })}
-          </ul>
+            </ul>
+          )}
         </div>
 
         <div className="grupo">
-          <h3 className="grupo-titulo">Completados</h3>
-          <ul className="lista">
+          <div className="grupo-header">
+            <h3 className="grupo-titulo">Completados</h3>
+            <button 
+              className="toggle-btn"
+              onClick={() => toggleGroup('finalizados')}
+            >
+              {expandedGroups.finalizados ? '▼' : '▶'}
+            </button>
+          </div>
+          {expandedGroups.finalizados && (
+            <ul className="lista">
             {Array.isArray(tareas) &&
               tareas
                 .filter((t) => t.estado === "finalizado")
@@ -222,7 +249,8 @@ const ListaDeTareas = () => {
                     </li>
                   );
                 })}
-          </ul>
+            </ul>
+          )}
         </div>
       </div>
     </div>
