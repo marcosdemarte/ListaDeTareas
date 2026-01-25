@@ -140,39 +140,91 @@ const ListaDeTareas = () => {
         </button>
       </div>
 
-      <ul className="lista">
-        {Array.isArray(tareas) &&
-          tareas.map((t, i) => (
-            <li 
-              key={i} 
-              className={`item ${t.estado}`} 
-              draggable
-              onDragStart={(e) => handleDragStart(e, i)}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, i)}
-            >
-              <span className="numero">{i + 1}.</span>
-              <span className="texto">{t.texto}</span>
+      <div className="grupos-container">
+        <div className="grupo">
+          <h3 className="grupo-titulo">Pendientes</h3>
+          <ul className="lista">
+            {Array.isArray(tareas) &&
+              tareas
+                .filter((t) => t.estado === "pendiente")
+                .map((t, i) => {
+                  const originalIndex = tareas.findIndex((task) => task === t);
+                  return (
+                    <li 
+                      key={originalIndex} 
+                      className={`item ${t.estado}`} 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, originalIndex)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, originalIndex)}
+                    >
+                      <span className="numero">{originalIndex + 1}.</span>
+                      <span className="texto">{t.texto}</span>
 
-              <select
-                value={t.estado}
-                onChange={(e) => cambiarEstado(i, e.target.value)}>
-                <option value="pendiente">Pendiente</option>
-                <option value="finalizado">Finalizado</option>
-              </select>
+                      <select
+                        value={t.estado}
+                        onChange={(e) => cambiarEstado(originalIndex, e.target.value)}>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="finalizado">Finalizado</option>
+                      </select>
 
-              <button onClick={() => borrarTarea(i)}>Borrar</button>
-              <button
-                onClick={() => {
-                  const nuevoTexto = prompt("Modificar tarea:", t.texto);
-                  if (nuevoTexto) modificarTarea(i, nuevoTexto);
-                }}>
-                Modificar
-              </button>
-            </li>
-          ))}
-      </ul>
+                      <button onClick={() => borrarTarea(originalIndex)}>Borrar</button>
+                      <button
+                        onClick={() => {
+                          const nuevoTexto = prompt("Modificar tarea:", t.texto);
+                          if (nuevoTexto) modificarTarea(originalIndex, nuevoTexto);
+                        }}>
+                        Modificar
+                      </button>
+                    </li>
+                  );
+                })}
+          </ul>
+        </div>
+
+        <div className="grupo">
+          <h3 className="grupo-titulo">Completados</h3>
+          <ul className="lista">
+            {Array.isArray(tareas) &&
+              tareas
+                .filter((t) => t.estado === "finalizado")
+                .map((t, i) => {
+                  const originalIndex = tareas.findIndex((task) => task === t);
+                  return (
+                    <li 
+                      key={originalIndex} 
+                      className={`item ${t.estado}`} 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, originalIndex)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, originalIndex)}
+                    >
+                      <span className="numero">{originalIndex + 1}.</span>
+                      <span className="texto">{t.texto}</span>
+
+                      <select
+                        value={t.estado}
+                        onChange={(e) => cambiarEstado(originalIndex, e.target.value)}>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="finalizado">Finalizado</option>
+                      </select>
+
+                      <button onClick={() => borrarTarea(originalIndex)}>Borrar</button>
+                      <button
+                        onClick={() => {
+                          const nuevoTexto = prompt("Modificar tarea:", t.texto);
+                          if (nuevoTexto) modificarTarea(originalIndex, nuevoTexto);
+                        }}>
+                        Modificar
+                      </button>
+                    </li>
+                  );
+                })}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 };

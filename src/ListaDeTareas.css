@@ -97,3 +97,34 @@
   padding: 4px 8px;
   cursor: pointer;
 }
+
+.grupos-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.grupo {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  background: white;
+}
+
+.grupo-titulo {
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.grupo:first-child .grupo-titulo {
+  color: #d9534f;
+  border-bottom-color: #d9534f;
+}
+
+.grupo:last-child .grupo-titulo {
+  color: #5cb85c;
+  border-bottom-color: #5cb85c;
+}

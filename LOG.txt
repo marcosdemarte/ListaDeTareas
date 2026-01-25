@@ -1,0 +1,11 @@
+LOG DE TAREAS - ListaDeTareas
+=====================================
+
+Tarea 1: Copiar README del repositorio al package
+- Fecha y hora de inicio: 2026-01-25 15:30:00
+- Fecha y hora de fin: 2026-01-25 15:32:00
+- Duración: 2 minutos
+
+=====================================
+TIEMPO TOTAL ACUMULADO: 2 minutos
+=====================================
