@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { xml2js, js2xml } from "xml-js";
-import { Buffer } from "buffer";
 import "./ListaDeTareas.css";
 
 const ListaDeTareas = () => {
+  // Solo mostrar en desarrollo
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+    return null;
+  }
   const [tareas, setTareas] = useState([]);
   const [nuevaTarea, setNuevaTarea] = useState("");
+  const [draggedIndex, setDraggedIndex] = useState(null);
 
   // Cargar desde localStorage (simulación de XML)
   useEffect(() => {
@@ -56,7 +60,9 @@ const ListaDeTareas = () => {
   };
 
   const borrarTarea = (index) => {
-    setTareas(tareas.filter((_, i) => i !== index));
+    if (window.confirm('¿Seguro que desea borrar esta tarea?')) {
+      setTareas(tareas.filter((_, i) => i !== index));
+    }
   };
 
   const modificarTarea = (index, nuevoTexto) => {
@@ -69,6 +75,31 @@ const ListaDeTareas = () => {
     const nuevas = [...tareas];
     nuevas[index].estado = nuevoEstado;
     setTareas(nuevas);
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.target.classList.add('dragging');
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.classList.remove('dragging');
+    setDraggedIndex(null);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    const nuevasTareas = [...tareas];
+    const [draggedTarea] = nuevasTareas.splice(draggedIndex, 1);
+    nuevasTareas.splice(dropIndex, 0, draggedTarea);
+    
+    setTareas(nuevasTareas);
   };
 
   return (
@@ -88,8 +119,17 @@ const ListaDeTareas = () => {
       <ul className="lista">
         {Array.isArray(tareas) &&
           tareas.map((t, i) => (
-            <li key={i} className={`item ${t.estado}`}>
-              <span>{t.texto}</span>
+            <li 
+              key={i} 
+              className={`item ${t.estado}`} 
+              draggable
+              onDragStart={(e) => handleDragStart(e, i)}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, i)}
+            >
+              <span className="numero">{i + 1}.</span>
+              <span className="texto">{t.texto}</span>
 
               <select
                 value={t.estado}

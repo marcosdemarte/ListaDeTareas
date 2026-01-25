@@ -1,10 +1,19 @@
 .lista-container {
-  max-width: 600px;
-  margin: 20px auto;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  max-width: 90vw;
+  height: 100vh;
+  margin: 0;
   padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border-left: 2px solid #ccc;
+  border-bottom: 2px solid #ccc;
+  border-radius: 0 0 0 8px;
   background: #f9f9f9;
+  overflow-y: auto;
+  z-index: 9999;
+  box-shadow: -2px 0 10px rgba(0,0,0,0.1);
 }
 
 .titulo {
@@ -30,8 +39,8 @@
 }
 
 .lista {
-  list-style: decimal;
-  padding-left: 20px;
+  list-style: none;
+  padding: 0;
 }
 
 .item {
@@ -39,6 +48,29 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: move;
+}
+
+.numero {
+  font-weight: bold;
+  color: #333;
+  min-width: 30px;
+}
+
+.texto {
+  flex: 1;
+}
+
+.item.dragging {
+  opacity: 0.5;
+}
+
+.item.drag-over {
+  border-top: 2px solid #007bff;
 }
 
 .item.pendiente span {
