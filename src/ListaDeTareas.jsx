@@ -3,44 +3,55 @@ import { xml2js, js2xml } from "xml-js";
 import "./ListaDeTareas.css";
 
 const ListaDeTareas = () => {
-  // Solo mostrar en desarrollo
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-    return null;
-  }
   const [tareas, setTareas] = useState([]);
   const [nuevaTarea, setNuevaTarea] = useState("");
   const [draggedIndex, setDraggedIndex] = useState(null);
 
-  // Cargar desde localStorage (simulación de XML)
+  // Cargar desde archivo XML local
   useEffect(() => {
-    const xmlGuardado = localStorage.getItem("tareasXML");
-    if (xmlGuardado) {
+    const cargarTareas = async () => {
       try {
-        const json = xml2js(xmlGuardado, { compact: true });
-        // Validar que exista y sea array
-        const lista = Array.isArray(json?.tareas?.tarea)
-          ? json.tareas.tarea.map((t) => ({
-              texto: t._text,
-              estado: t._attributes?.estado || "pendiente",
-            }))
-          : json?.tareas?.tarea
-          ? [
-              {
-                texto: json.tareas.tarea._text,
-                estado: json.tareas.tarea._attributes?.estado || "pendiente",
-              },
-            ]
-          : [];
-        setTareas(lista);
+        // Intentar cargar desde archivo XML local
+        try {
+          const response = await fetch('./tareas.xml');
+          if (response.ok) {
+            const xmlContent = await response.text();
+            if (xmlContent.trim()) {
+              const json = xml2js(xmlContent, { compact: true });
+              const lista = Array.isArray(json?.tareas?.tarea)
+                ? json.tareas.tarea.map((t) => ({
+                    texto: t._text,
+                    estado: t._attributes?.estado || "pendiente",
+                  }))
+                : json?.tareas?.tarea
+                ? [
+                    {
+                      texto: json.tareas.tarea._text,
+                      estado: json.tareas.tarea._attributes?.estado || "pendiente",
+                    },
+                  ]
+                : [];
+              setTareas(lista);
+              return;
+            }
+          }
+        } catch (fetchErr) {
+          console.log("No se pudo leer tareas.xml, iniciando con lista vacía");
+        }
+        
+        // Si no existe el archivo o está vacío, iniciar con array vacío
+        setTareas([]);
       } catch (err) {
-        console.error("Error al parsear XML:", err);
+        console.error("Error al cargar tareas:", err);
         setTareas([]);
       }
-    }
+    };
+    
+    cargarTareas();
   }, []);
 
-  // Guardar en XML dentro de localStorage
-  useEffect(() => {
+  // Descargar XML cuando las tareas cambian
+  const descargarXML = () => {
     const json = {
       tareas: {
         tarea: tareas.map((t) => ({
@@ -50,8 +61,18 @@ const ListaDeTareas = () => {
       },
     };
     const xml = js2xml(json, { compact: true, spaces: 4 });
-    localStorage.setItem("tareasXML", xml);
-  }, [tareas]);
+    
+    // Crear blob y descargar
+    const blob = new Blob([xml], { type: 'text/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tareas.xml';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const agregarTarea = () => {
     if (!nuevaTarea.trim()) return;
@@ -114,6 +135,9 @@ const ListaDeTareas = () => {
           placeholder="Escribe una nueva tarea..."
         />
         <button onClick={agregarTarea}>Agregar</button>
+        <button onClick={descargarXML} className="btn-descargar">
+          Descargar XML
+        </button>
       </div>
 
       <ul className="lista">

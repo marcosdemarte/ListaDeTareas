@@ -38,6 +38,17 @@
   cursor: pointer;
 }
 
+.btn-descargar {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.btn-descargar:hover {
+  background-color: #218838;
+}
+
 .lista {
   list-style: none;
   padding: 0;
