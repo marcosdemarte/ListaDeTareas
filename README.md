@@ -10,6 +10,12 @@ npm install @marcosdemarte/lista-de-tareas
 
 ## Actualización
 
+Para actualizar a la versión específica (ej. 1.0.12):
+
+```bash
+npm install @marcosdemarte/lista-de-tareas@1.0.12
+```
+
 Para actualizar a la última versión:
 
 ```bash
