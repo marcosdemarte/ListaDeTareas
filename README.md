@@ -33,6 +33,10 @@ import path from "path";
 
 const filePath = path.join(process.cwd(), "public", "tareas.xml");
 
+// Sin esto, Next.js puede cachear el GET como si fuera estático
+// y seguir sirviendo una respuesta vieja aunque el archivo cambie.
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const xml = await readFile(filePath, "utf-8");

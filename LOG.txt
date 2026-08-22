@@ -71,6 +71,22 @@ Proceso completado:
 ✓ Implementado y probado ese endpoint en powerbit-v3: agregar tarea + refrescar la pagina mantiene la tarea
 ✓ Version actualizada a 1.1.0, publicada y actualizada en powerbit-v3
 
+Tarea 7: Fix bug critico - se perdian las tareas al recargar (1.1.1)
+- Fecha: 2026-08-22
+
+Proceso completado:
+✓ Detectado y arreglado: Next.js cacheaba el GET del route handler y seguia sirviendo
+  la primera respuesta vacia aunque tareas.xml cambiara en disco. Se agrego
+  "export const dynamic = 'force-dynamic'" al endpoint (en powerbit-v3 y en el
+  snippet del README).
+✓ Detectado y arreglado: en desarrollo, el doble montaje de efectos de React (Strict
+  Mode) hacia que el guardado se disparara con el estado vacio inicial antes de que
+  terminara la carga real, pisando tareas.xml. Reemplazado el flag compartido por el
+  patron que React recomienda para efectos async (bandera de cancelacion por efecto).
+✓ Probado en powerbit-v3: agregar 2 tareas + recargar la pagina 2 veces seguidas,
+  ambas tareas se mantienen intactas en tareas.xml
+✓ Version actualizada a 1.1.1, publicada y actualizada en powerbit-v3
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4, 5 y 6
+TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4, 5, 6 y 7
 =====================================

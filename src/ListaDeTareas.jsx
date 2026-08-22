@@ -55,7 +55,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
   const [editText, setEditText] = useState("");
   const [isDark, setIsDark] = useState(false);
   const c = isDark ? DARK_COLORS : LIGHT_COLORS;
-  const skipNextSaveRef = useRef(true);
+  const loadedRef = useRef(false);
 
   // Responder al tema (dark/light) del proyecto que consume el componente
   useEffect(() => {
@@ -77,6 +77,8 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
 
   // Cargar tareas desde el endpoint (que a su vez lee tareas.xml en el servidor)
   useEffect(() => {
+    let cancelado = false;
+
     const cargarTareas = async () => {
       let lista = [];
       try {
@@ -106,20 +108,27 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
         console.warn(`No se pudo contactar ${apiEndpoint}, iniciando con lista vacía.`, err);
       }
 
-      // El resultado de la carga no debe disparar un guardado
-      skipNextSaveRef.current = true;
+      // Si el efecto ya fue cancelado (por ejemplo, por el doble montaje de
+      // Strict Mode en desarrollo), no aplicamos este resultado: evita que
+      // se marque como "ya cargado" antes de tiempo y se dispare un guardado
+      // con datos viejos o vacíos.
+      if (cancelado) return;
       setTareas(lista);
+      loadedRef.current = true;
     };
 
     cargarTareas();
+
+    return () => {
+      cancelado = true;
+    };
   }, [apiEndpoint]);
 
   // Guardar automáticamente en el XML cada vez que cambian las tareas (agregar, modificar, borrar, reordenar)
   useEffect(() => {
-    if (skipNextSaveRef.current) {
-      skipNextSaveRef.current = false;
-      return;
-    }
+    // No guardar hasta que la carga inicial haya terminado de verdad:
+    // evita pisar tareas.xml con el estado inicial vacío del componente.
+    if (!loadedRef.current) return;
 
     const guardarTareas = async () => {
       const json = {
