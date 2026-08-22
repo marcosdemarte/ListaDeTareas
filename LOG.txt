@@ -51,6 +51,15 @@ Proceso completado:
 ✓ README actualizado (instalación, actualización, funcionamiento, tema)
 ✓ Versión actualizada a 1.0.20
 
+Tarea 5: Boton Agregar azul, edicion inline (sin prompt del navegador) y margen superior
+- Fecha: 2026-08-22
+
+Proceso completado:
+✓ Boton "Agregar" con estilo azul
+✓ "Modificar" ahora edita el texto in-line en la lista, sin usar prompt() del navegador
+✓ Agregado margen superior al contenedor del componente
+✓ Version actualizada a 1.0.21, publicada y actualizada en powerbit-v3
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 23 minutos + esta tarea
+TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 y 5
 =====================================

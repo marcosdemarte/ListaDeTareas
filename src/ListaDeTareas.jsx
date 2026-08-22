@@ -51,6 +51,8 @@ const ListaDeTareas = () => {
   const [nuevaTarea, setNuevaTarea] = useState("");
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({ pendientes: true, finalizados: true });
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editText, setEditText] = useState("");
   const [isDark, setIsDark] = useState(false);
   const c = isDark ? DARK_COLORS : LIGHT_COLORS;
 
@@ -133,6 +135,24 @@ const ListaDeTareas = () => {
     setTareas(nuevas);
   };
 
+  const iniciarEdicion = (index, textoActual) => {
+    setEditingIndex(index);
+    setEditText(textoActual);
+  };
+
+  const guardarEdicion = () => {
+    if (editText.trim()) {
+      modificarTarea(editingIndex, editText.trim());
+    }
+    setEditingIndex(null);
+    setEditText("");
+  };
+
+  const cancelarEdicion = () => {
+    setEditingIndex(null);
+    setEditText("");
+  };
+
   const cambiarEstado = (index, nuevoEstado) => {
     const nuevas = [...tareas];
     nuevas[index].estado = nuevoEstado;
@@ -181,7 +201,7 @@ const ListaDeTareas = () => {
   return (
     <div style={{
       width: '100%',
-      margin: '0',
+      margin: '20px 0 0 0',
       padding: '15px',
       border: `1px solid ${c.border}`,
       borderRadius: '8px',
@@ -217,7 +237,12 @@ const ListaDeTareas = () => {
         />
         <button onClick={agregarTarea} style={{
           padding: '8px 12px',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          backgroundColor: '#2563eb',
+          color: '#ffffff',
+          border: 'none',
+          borderRadius: '4px',
+          fontWeight: 'bold'
         }}>Agregar</button>
       </div>
 
@@ -300,45 +325,75 @@ const ListaDeTareas = () => {
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, originalIndex, "pendiente")}
                     >
-                      <span style={{
-                        fontWeight: 'bold',
-                        color: c.pendienteAccent,
-                        minWidth: '30px'
-                      }}>{originalIndex + 1}.</span>
-                      <span style={{
-                        flex: '1',
-                        color: c.pendienteAccent
-                      }}>{t.texto}</span>
+                      {editingIndex === originalIndex ? (
+                        <>
+                          <input
+                            type="text"
+                            value={editText}
+                            autoFocus
+                            onChange={(e) => setEditText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') guardarEdicion();
+                              if (e.key === 'Escape') cancelarEdicion();
+                            }}
+                            style={{
+                              flex: '1',
+                              padding: '4px 8px',
+                              background: c.inputBg,
+                              color: c.inputText,
+                              border: `1px solid ${c.inputBorder}`,
+                              borderRadius: '4px'
+                            }}
+                          />
+                          <button onClick={guardarEdicion} style={{
+                            padding: '4px 8px',
+                            cursor: 'pointer'
+                          }}>Guardar</button>
+                          <button onClick={cancelarEdicion} style={{
+                            padding: '4px 8px',
+                            cursor: 'pointer'
+                          }}>Cancelar</button>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{
+                            fontWeight: 'bold',
+                            color: c.pendienteAccent,
+                            minWidth: '30px'
+                          }}>{originalIndex + 1}.</span>
+                          <span style={{
+                            flex: '1',
+                            color: c.pendienteAccent
+                          }}>{t.texto}</span>
 
-                      <select
-                        value={t.estado}
-                        onChange={(e) => cambiarEstado(originalIndex, e.target.value)}
-                        style={{
-                          padding: '4px 8px',
-                          background: c.inputBg,
-                          color: c.inputText,
-                          border: `1px solid ${c.inputBorder}`,
-                          borderRadius: '4px'
-                        }}>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="finalizado">Finalizado</option>
-                      </select>
+                          <select
+                            value={t.estado}
+                            onChange={(e) => cambiarEstado(originalIndex, e.target.value)}
+                            style={{
+                              padding: '4px 8px',
+                              background: c.inputBg,
+                              color: c.inputText,
+                              border: `1px solid ${c.inputBorder}`,
+                              borderRadius: '4px'
+                            }}>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="finalizado">Finalizado</option>
+                          </select>
 
-                      <button onClick={() => borrarTarea(originalIndex)} style={{
-                        padding: '4px 8px',
-                        cursor: 'pointer'
-                      }}>Borrar</button>
-                      <button
-                        onClick={() => {
-                          const nuevoTexto = prompt("Modificar tarea:", t.texto);
-                          if (nuevoTexto) modificarTarea(originalIndex, nuevoTexto);
-                        }}
-                        style={{
-                          padding: '4px 8px',
-                          cursor: 'pointer'
-                        }}>
-                        Modificar
-                      </button>
+                          <button onClick={() => borrarTarea(originalIndex)} style={{
+                            padding: '4px 8px',
+                            cursor: 'pointer'
+                          }}>Borrar</button>
+                          <button
+                            onClick={() => iniciarEdicion(originalIndex, t.texto)}
+                            style={{
+                              padding: '4px 8px',
+                              cursor: 'pointer'
+                            }}>
+                            Modificar
+                          </button>
+                        </>
+                      )}
                     </li>
                   );
                 })}
@@ -420,47 +475,77 @@ const ListaDeTareas = () => {
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, originalIndex, "finalizado")}
                     >
-                      <span style={{
-                        fontWeight: 'bold',
-                        color: c.completadoAccent,
-                        minWidth: '30px',
-                        textDecoration: 'line-through'
-                      }}>{originalIndex + 1}.</span>
-                      <span style={{
-                        flex: '1',
-                        color: c.completadoAccent,
-                        textDecoration: 'line-through'
-                      }}>{t.texto}</span>
+                      {editingIndex === originalIndex ? (
+                        <>
+                          <input
+                            type="text"
+                            value={editText}
+                            autoFocus
+                            onChange={(e) => setEditText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') guardarEdicion();
+                              if (e.key === 'Escape') cancelarEdicion();
+                            }}
+                            style={{
+                              flex: '1',
+                              padding: '4px 8px',
+                              background: c.inputBg,
+                              color: c.inputText,
+                              border: `1px solid ${c.inputBorder}`,
+                              borderRadius: '4px'
+                            }}
+                          />
+                          <button onClick={guardarEdicion} style={{
+                            padding: '4px 8px',
+                            cursor: 'pointer'
+                          }}>Guardar</button>
+                          <button onClick={cancelarEdicion} style={{
+                            padding: '4px 8px',
+                            cursor: 'pointer'
+                          }}>Cancelar</button>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{
+                            fontWeight: 'bold',
+                            color: c.completadoAccent,
+                            minWidth: '30px',
+                            textDecoration: 'line-through'
+                          }}>{originalIndex + 1}.</span>
+                          <span style={{
+                            flex: '1',
+                            color: c.completadoAccent,
+                            textDecoration: 'line-through'
+                          }}>{t.texto}</span>
 
-                      <select
-                        value={t.estado}
-                        onChange={(e) => cambiarEstado(originalIndex, e.target.value)}
-                        style={{
-                          padding: '4px 8px',
-                          background: c.inputBg,
-                          color: c.inputText,
-                          border: `1px solid ${c.inputBorder}`,
-                          borderRadius: '4px'
-                        }}>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="finalizado">Finalizado</option>
-                      </select>
+                          <select
+                            value={t.estado}
+                            onChange={(e) => cambiarEstado(originalIndex, e.target.value)}
+                            style={{
+                              padding: '4px 8px',
+                              background: c.inputBg,
+                              color: c.inputText,
+                              border: `1px solid ${c.inputBorder}`,
+                              borderRadius: '4px'
+                            }}>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="finalizado">Finalizado</option>
+                          </select>
 
-                      <button onClick={() => borrarTarea(originalIndex)} style={{
-                        padding: '4px 8px',
-                        cursor: 'pointer'
-                      }}>Borrar</button>
-                      <button
-                        onClick={() => {
-                          const nuevoTexto = prompt("Modificar tarea:", t.texto);
-                          if (nuevoTexto) modificarTarea(originalIndex, nuevoTexto);
-                        }}
-                        style={{
-                          padding: '4px 8px',
-                          cursor: 'pointer'
-                        }}>
-                        Modificar
-                      </button>
+                          <button onClick={() => borrarTarea(originalIndex)} style={{
+                            padding: '4px 8px',
+                            cursor: 'pointer'
+                          }}>Borrar</button>
+                          <button
+                            onClick={() => iniciarEdicion(originalIndex, t.texto)}
+                            style={{
+                              padding: '4px 8px',
+                              cursor: 'pointer'
+                            }}>
+                            Modificar
+                          </button>
+                        </>
+                      )}
                     </li>
                   );
                 })}
