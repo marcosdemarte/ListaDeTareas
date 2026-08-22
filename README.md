@@ -45,19 +45,23 @@ y definí la variable de entorno `GITHUB_TOKEN` con un token de GitHub que tenga
 
 ## Actualización
 
-Para actualizar a la última versión:
+1. Verificá que el proyecto tenga el `.npmrc` con el scope `@marcosdemarte` apuntando a GitHub Packages (ver [Instalación](#instalación)) y que la variable de entorno `GITHUB_TOKEN` esté seteada en esa consola.
+   - Si el repositorio de este paquete es privado, el token necesita además el scope `repo` (no solo `read:packages`/`write:packages`), o vas a ver un `401 Unauthorized` al instalar.
+2. Instalá la última versión publicada:
 
-```bash
-npm update @marcosdemarte/lista-de-tareas
-```
+   ```bash
+   npm install @marcosdemarte/lista-de-tareas@latest
+   ```
 
-Para instalar una versión específica (ej. 1.0.18):
+   `npm update @marcosdemarte/lista-de-tareas` también funciona, pero solo mueve la versión dentro del rango que ya tengas en tu `package.json` (por ejemplo `^1.0.20` no sube a `2.0.0`); `@latest` es más directo si querés asegurarte de traer la versión más nueva.
 
-```bash
-npm install @marcosdemarte/lista-de-tareas@1.0.18
-```
+3. Para fijar una versión específica en vez de la última:
 
-En ambos casos las tareas ya cargadas en tu `tareas.xml` local quedan intactas (ver [Cómo funciona](#cómo-funciona)).
+   ```bash
+   npm install @marcosdemarte/lista-de-tareas@1.0.20
+   ```
+
+En todos los casos las tareas ya cargadas en tu `tareas.xml` local quedan intactas (ver [Cómo funciona](#cómo-funciona)) — el update solo reemplaza el código dentro de `node_modules`.
 
 ## Uso
 
