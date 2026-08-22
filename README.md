@@ -31,7 +31,7 @@ import { NextResponse } from "next/server";
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
 
-const filePath = path.join(process.cwd(), "public", "tareas.xml");
+const filePath = path.join(process.cwd(), "data", "tareas.xml");
 
 // Sin esto, Next.js puede cachear el GET como si fuera estático
 // y seguir sirviendo una respuesta vieja aunque el archivo cambie.
@@ -53,7 +53,7 @@ export async function POST(request) {
 }
 ```
 
-Con esto, `public/tareas.xml` queda como el archivo real y persistente del proyecto (se puede versionar en git como cualquier otro dato, o dejarlo fuera del repo si preferís que cada entorno tenga el suyo).
+Con esto, `data/tareas.xml` (en la raíz del proyecto, **no** dentro de `public/`) queda como el archivo real y persistente. Es importante que no esté en `public/`: cualquier archivo ahí queda servido como estático y accesible directamente por URL (`tu-sitio.com/tareas.xml`), lo cual expondría el contenido de tus tareas a cualquiera. Podés versionar `data/tareas.xml` en git como cualquier otro dato, o dejarlo fuera del repo si preferís que cada entorno tenga el suyo.
 
 ## Tema claro/oscuro
 
