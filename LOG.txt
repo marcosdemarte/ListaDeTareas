@@ -60,6 +60,17 @@ Proceso completado:
 ✓ Agregado margen superior al contenedor del componente
 ✓ Version actualizada a 1.0.21, publicada y actualizada en powerbit-v3
 
+Tarea 6: Persistencia real en tareas.xml via endpoint (sin SQL)
+- Fecha: 2026-08-22
+
+Proceso completado:
+✓ El componente ahora lee y guarda las tareas via GET/POST a un endpoint (/api/tareas por defecto, configurable con la prop apiEndpoint)
+✓ Cada cambio (agregar, modificar, borrar, cambiar estado, reordenar) se guarda automaticamente en tareas.xml a traves de ese endpoint
+✓ Si el endpoint no esta implementado en el proyecto, el componente sigue funcionando en memoria y avisa por consola que no pudo guardar
+✓ Documentado en el README el endpoint de ejemplo para Next.js App Router (src/app/api/tareas/route.js)
+✓ Implementado y probado ese endpoint en powerbit-v3: agregar tarea + refrescar la pagina mantiene la tarea
+✓ Version actualizada a 1.1.0, publicada y actualizada en powerbit-v3
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 y 5
+TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4, 5 y 6
 =====================================

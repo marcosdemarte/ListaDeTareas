@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { xml2js } from "xml-js";
+import React, { useState, useEffect, useRef } from "react";
+import { xml2js, js2xml } from "xml-js";
 
 const LIGHT_COLORS = {
   bg: "#f9f9f9",
@@ -46,7 +46,7 @@ const detectDark = () => {
   );
 };
 
-const ListaDeTareas = () => {
+const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
   const [tareas, setTareas] = useState([]);
   const [nuevaTarea, setNuevaTarea] = useState("");
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -55,6 +55,7 @@ const ListaDeTareas = () => {
   const [editText, setEditText] = useState("");
   const [isDark, setIsDark] = useState(false);
   const c = isDark ? DARK_COLORS : LIGHT_COLORS;
+  const skipNextSaveRef = useRef(true);
 
   // Responder al tema (dark/light) del proyecto que consume el componente
   useEffect(() => {
@@ -74,48 +75,79 @@ const ListaDeTareas = () => {
     };
   }, []);
 
-  // Cargar desde archivo XML local
+  // Cargar tareas desde el endpoint (que a su vez lee tareas.xml en el servidor)
   useEffect(() => {
     const cargarTareas = async () => {
+      let lista = [];
       try {
-        // Intentar cargar desde archivo XML local
-        try {
-          const response = await fetch('./tareas.xml');
-          if (response.ok) {
-            const xmlContent = await response.text();
-            if (xmlContent.trim()) {
-              const json = xml2js(xmlContent, { compact: true });
-              const lista = Array.isArray(json?.tareas?.tarea)
-                ? json.tareas.tarea.map((t) => ({
-                    texto: t._text,
-                    estado: t._attributes?.estado || "pendiente",
-                  }))
-                : json?.tareas?.tarea
-                ? [
-                    {
-                      texto: json.tareas.tarea._text,
-                      estado: json.tareas.tarea._attributes?.estado || "pendiente",
-                    },
-                  ]
-                : [];
-              setTareas(lista);
-              return;
-            }
+        const response = await fetch(apiEndpoint, { cache: "no-store" });
+        if (response.ok) {
+          const xmlContent = await response.text();
+          if (xmlContent.trim()) {
+            const json = xml2js(xmlContent, { compact: true });
+            lista = Array.isArray(json?.tareas?.tarea)
+              ? json.tareas.tarea.map((t) => ({
+                  texto: t._text,
+                  estado: t._attributes?.estado || "pendiente",
+                }))
+              : json?.tareas?.tarea
+              ? [
+                  {
+                    texto: json.tareas.tarea._text,
+                    estado: json.tareas.tarea._attributes?.estado || "pendiente",
+                  },
+                ]
+              : [];
           }
-        } catch (fetchErr) {
-          console.log("No se pudo leer tareas.xml, iniciando con lista vacía");
+        } else {
+          console.warn(`No se pudieron cargar las tareas (${apiEndpoint} respondió ${response.status}). Iniciando con lista vacía.`);
         }
-
-        // Si no existe el archivo o está vacío, iniciar con array vacío
-        setTareas([]);
       } catch (err) {
-        console.error("Error al cargar tareas:", err);
-        setTareas([]);
+        console.warn(`No se pudo contactar ${apiEndpoint}, iniciando con lista vacía.`, err);
       }
+
+      // El resultado de la carga no debe disparar un guardado
+      skipNextSaveRef.current = true;
+      setTareas(lista);
     };
 
     cargarTareas();
-  }, []);
+  }, [apiEndpoint]);
+
+  // Guardar automáticamente en el XML cada vez que cambian las tareas (agregar, modificar, borrar, reordenar)
+  useEffect(() => {
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false;
+      return;
+    }
+
+    const guardarTareas = async () => {
+      const json = {
+        tareas: {
+          tarea: tareas.map((t) => ({
+            _attributes: { estado: t.estado },
+            _text: t.texto,
+          })),
+        },
+      };
+      const xml = js2xml(json, { compact: true, spaces: 4 });
+
+      try {
+        const response = await fetch(apiEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/xml" },
+          body: xml,
+        });
+        if (!response.ok) {
+          console.warn(`No se pudieron guardar las tareas (${apiEndpoint} respondió ${response.status}). Revisá que el endpoint esté implementado en tu proyecto.`);
+        }
+      } catch (err) {
+        console.warn(`No se pudo guardar en ${apiEndpoint}.`, err);
+      }
+    };
+
+    guardarTareas();
+  }, [tareas, apiEndpoint]);
 
   const agregarTarea = () => {
     if (!nuevaTarea.trim()) return;
