@@ -133,18 +133,21 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
     };
   }, [apiEndpoint]);
 
-  // Guardar automáticamente en el XML cada vez que cambian las tareas (agregar, modificar, borrar, reordenar)
-  useEffect(() => {
-    // No guardar hasta que la carga inicial haya terminado de verdad:
-    // evita pisar tareas.xml con el estado inicial vacío del componente.
-    if (!loadedRef.current) return;
+  // Guarda en el servidor la lista pasada por parámetro. Se llama de forma
+  // explícita desde cada acción del usuario (agregar, modificar, borrar,
+  // cambiar estado, reordenar) — nunca automáticamente al cargar, para que
+  // una simple carga de la página (por ejemplo, tras un hot-reload en
+  // desarrollo) no pueda disparar una escritura que compita con la de otra
+  // instancia del componente.
+  const guardarEnServidor = (lista) => {
+    if (!loadedRef.current) {
+      console.warn(`Todavía no se completó la carga inicial de ${apiEndpoint}; no se guarda este cambio para no arriesgarse a pisar datos existentes.`);
+      return;
+    }
 
-    // El XML se arma acá, de forma síncrona, para que quede fijado el
-    // estado de ESTE cambio en particular (no el que haya en el momento
-    // en que finalmente se ejecute el fetch).
     const json = {
       tareas: {
-        tarea: tareas.map((t) => ({
+        tarea: lista.map((t) => ({
           _attributes: { estado: t.estado },
           _text: t.texto,
         })),
@@ -152,7 +155,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
     };
     const xml = js2xml(json, { compact: true, spaces: 4 });
 
-    const guardarTareas = async () => {
+    const guardar = async () => {
       try {
         const response = await fetch(apiEndpoint, {
           method: "POST",
@@ -168,24 +171,27 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
     };
 
     // Encolamos el guardado en vez de dispararlo directo: si dos cambios
-    // ocurren muy seguido (por ejemplo, cargar la página y agregar una
-    // tarea casi al instante), se dispararían dos guardados en paralelo, y
-    // sin ningún orden garantizado el más viejo podía terminar de responder
+    // ocurren muy seguido, se dispararían dos guardados en paralelo, y sin
+    // ningún orden garantizado el más viejo podía terminar de responder
     // DESPUÉS que el más nuevo y pisarlo con datos desactualizados. Encolar
     // asegura que siempre se escriban en el mismo orden en que ocurrieron
     // los cambios, uno por vez.
-    saveQueueRef.current = saveQueueRef.current.then(guardarTareas);
-  }, [tareas, apiEndpoint]);
+    saveQueueRef.current = saveQueueRef.current.then(guardar);
+  };
 
   const agregarTarea = () => {
     if (!nuevaTarea.trim()) return;
-    setTareas([...tareas, { texto: nuevaTarea, estado: "pendiente" }]);
+    const nuevas = [...tareas, { texto: nuevaTarea, estado: "pendiente" }];
+    setTareas(nuevas);
     setNuevaTarea("");
+    guardarEnServidor(nuevas);
   };
 
   const borrarTarea = (index) => {
     if (window.confirm('¿Seguro que desea borrar esta tarea?')) {
-      setTareas(tareas.filter((_, i) => i !== index));
+      const nuevas = tareas.filter((_, i) => i !== index);
+      setTareas(nuevas);
+      guardarEnServidor(nuevas);
     }
   };
 
@@ -193,6 +199,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
     const nuevas = [...tareas];
     nuevas[index].texto = nuevoTexto;
     setTareas(nuevas);
+    guardarEnServidor(nuevas);
   };
 
   const iniciarEdicion = (index, textoActual) => {
@@ -217,6 +224,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
     const nuevas = [...tareas];
     nuevas[index].estado = nuevoEstado;
     setTareas(nuevas);
+    guardarEnServidor(nuevas);
   };
 
   const handleDragStart = (e, index) => {
@@ -249,6 +257,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
 
     setTareas(nuevasTareas);
     setDraggedIndex(null);
+    guardarEnServidor(nuevasTareas);
   };
 
   const toggleGroup = (group) => {
