@@ -81,9 +81,11 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
 
     const cargarTareas = async () => {
       let lista = [];
+      let cargaExitosa = false;
       try {
         const response = await fetch(apiEndpoint, { cache: "no-store" });
         if (response.ok) {
+          cargaExitosa = true;
           const xmlContent = await response.text();
           if (xmlContent.trim()) {
             const json = xml2js(xmlContent, { compact: true });
@@ -102,10 +104,10 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
               : [];
           }
         } else {
-          console.warn(`No se pudieron cargar las tareas (${apiEndpoint} respondió ${response.status}). Iniciando con lista vacía.`);
+          console.warn(`No se pudieron cargar las tareas (${apiEndpoint} respondió ${response.status}). Mostrando lista vacía, guardado automático desactivado hasta la próxima carga exitosa.`);
         }
       } catch (err) {
-        console.warn(`No se pudo contactar ${apiEndpoint}, iniciando con lista vacía.`, err);
+        console.warn(`No se pudo contactar ${apiEndpoint}. Mostrando lista vacía, guardado automático desactivado hasta la próxima carga exitosa.`, err);
       }
 
       // Si el efecto ya fue cancelado (por ejemplo, por el doble montaje de
@@ -114,7 +116,13 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
       // con datos viejos o vacíos.
       if (cancelado) return;
       setTareas(lista);
-      loadedRef.current = true;
+      // Solo habilitamos el guardado automático si la carga fue realmente
+      // exitosa. Si falló (red caída, endpoint no disponible todavía, etc.),
+      // dejamos loadedRef en false para no arriesgarnos a pisar tareas.xml
+      // con una lista vacía por culpa de un error transitorio.
+      if (cargaExitosa) {
+        loadedRef.current = true;
+      }
     };
 
     cargarTareas();

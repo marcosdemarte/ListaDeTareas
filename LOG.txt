@@ -97,6 +97,18 @@ Proceso completado:
 ✓ README actualizado: ya no hace falta el scope repo en el token (el repo es publico), solo read:packages/write:packages
 ✓ Version actualizada a 1.1.2, publicada
 
+Tarea 9: Fix critico - guardado automatico pisaba tareas.xml cuando el GET fallaba (1.1.3)
+- Fecha: 2026-08-23
+
+Proceso completado:
+✓ Detectado: si el GET inicial a /api/tareas fallaba por cualquier motivo (red, endpoint
+  no listo todavia, etc.), el componente igual marcaba la carga como "exitosa" con lista
+  vacia, y el guardado automatico terminaba pisando tareas.xml con esa lista vacia
+✓ Arreglado: el guardado automatico solo se habilita si el GET realmente respondio ok.
+  Si falla, se muestra lista vacia en pantalla pero no se guarda nada hasta lograr una
+  carga exitosa, protegiendo el archivo real
+✓ Version actualizada a 1.1.3, publicada y actualizada en powerbit-v3
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4, 5, 6, 7 y 8
+TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 a 9
 =====================================
