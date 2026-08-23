@@ -125,6 +125,17 @@ Proceso completado:
   en pantalla, y se mantuvieron intactas despues de recargar
 ✓ Version actualizada a 1.1.4, publicada y actualizada en powerbit-v3
 
+Tarea 11: Fix numeracion - cada grupo numera desde 1 (1.1.5)
+- Fecha: 2026-08-23
+
+Proceso completado:
+✓ Detectado: la numeracion usaba el indice de la tarea en el array completo (mezclando
+  pendientes y completados), asi que Pendientes podia mostrar 1, 2, 4 (saltandose el 3,
+  que estaba en Completados) en vez de numerar 1, 2, 3 de forma independiente
+✓ Arreglado: cada grupo numera con su propio indice local dentro de la lista filtrada,
+  independiente del otro grupo
+✓ Version actualizada a 1.1.5, publicada y actualizada en powerbit-v3
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 a 10
+TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 a 11
 =====================================

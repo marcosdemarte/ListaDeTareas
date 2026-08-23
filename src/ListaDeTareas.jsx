@@ -420,7 +420,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
                             fontWeight: 'bold',
                             color: c.pendienteAccent,
                             minWidth: '30px'
-                          }}>{originalIndex + 1}.</span>
+                          }}>{i + 1}.</span>
                           <span style={{
                             flex: '1',
                             color: c.pendienteAccent
@@ -571,7 +571,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
                             color: c.completadoAccent,
                             minWidth: '30px',
                             textDecoration: 'line-through'
-                          }}>{originalIndex + 1}.</span>
+                          }}>{i + 1}.</span>
                           <span style={{
                             flex: '1',
                             color: c.completadoAccent,
