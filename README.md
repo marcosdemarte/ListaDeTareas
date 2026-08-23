@@ -48,6 +48,18 @@ export async function GET() {
 
 export async function POST(request) {
   const xml = await request.text();
+
+  // Si la conexión se corta a mitad de la solicitud (el navegador se cierra,
+  // se reinicia la PC, se pierde la red), puede llegar un cuerpo vacío o
+  // truncado. Nunca pisar el archivo real con algo que no parezca XML
+  // válido de tareas — mejor rechazar el guardado que perder datos.
+  if (!xml.trim().startsWith("<tareas")) {
+    return NextResponse.json(
+      { ok: false, error: "Cuerpo vacío o inválido, no se guardó" },
+      { status: 400 }
+    );
+  }
+
   await writeFile(filePath, xml, "utf-8");
   return NextResponse.json({ ok: true });
 }
