@@ -87,6 +87,16 @@ Proceso completado:
   ambas tareas se mantienen intactas en tareas.xml
 ✓ Version actualizada a 1.1.1, publicada y actualizada en powerbit-v3
 
+Tarea 8: Repo publico, limpieza de info personal (1.1.2)
+- Fecha: 2026-08-22
+
+Proceso completado:
+✓ Revision de seguridad completa (archivos actuales + historial de git): sin secretos vivos
+✓ Repositorio pasado a publico en GitHub
+✓ Borrado _data/guion.txt (info personal: nombre, edad, ciudad, rutas de otro proyecto)
+✓ README actualizado: ya no hace falta el scope repo en el token (el repo es publico), solo read:packages/write:packages
+✓ Version actualizada a 1.1.2, publicada
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4, 5, 6 y 7
+TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4, 5, 6, 7 y 8
 =====================================
