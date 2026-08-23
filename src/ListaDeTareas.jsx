@@ -56,6 +56,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
   const [isDark, setIsDark] = useState(false);
   const c = isDark ? DARK_COLORS : LIGHT_COLORS;
   const loadedRef = useRef(false);
+  const saveQueueRef = useRef(Promise.resolve());
 
   // Responder al tema (dark/light) del proyecto que consume el componente
   useEffect(() => {
@@ -138,17 +139,20 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
     // evita pisar tareas.xml con el estado inicial vacío del componente.
     if (!loadedRef.current) return;
 
-    const guardarTareas = async () => {
-      const json = {
-        tareas: {
-          tarea: tareas.map((t) => ({
-            _attributes: { estado: t.estado },
-            _text: t.texto,
-          })),
-        },
-      };
-      const xml = js2xml(json, { compact: true, spaces: 4 });
+    // El XML se arma acá, de forma síncrona, para que quede fijado el
+    // estado de ESTE cambio en particular (no el que haya en el momento
+    // en que finalmente se ejecute el fetch).
+    const json = {
+      tareas: {
+        tarea: tareas.map((t) => ({
+          _attributes: { estado: t.estado },
+          _text: t.texto,
+        })),
+      },
+    };
+    const xml = js2xml(json, { compact: true, spaces: 4 });
 
+    const guardarTareas = async () => {
       try {
         const response = await fetch(apiEndpoint, {
           method: "POST",
@@ -163,7 +167,14 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
       }
     };
 
-    guardarTareas();
+    // Encolamos el guardado en vez de dispararlo directo: si dos cambios
+    // ocurren muy seguido (por ejemplo, cargar la página y agregar una
+    // tarea casi al instante), se dispararían dos guardados en paralelo, y
+    // sin ningún orden garantizado el más viejo podía terminar de responder
+    // DESPUÉS que el más nuevo y pisarlo con datos desactualizados. Encolar
+    // asegura que siempre se escriban en el mismo orden en que ocurrieron
+    // los cambios, uno por vez.
+    saveQueueRef.current = saveQueueRef.current.then(guardarTareas);
   }, [tareas, apiEndpoint]);
 
   const agregarTarea = () => {

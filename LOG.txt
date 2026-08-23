@@ -109,6 +109,22 @@ Proceso completado:
   carga exitosa, protegiendo el archivo real
 ✓ Version actualizada a 1.1.3, publicada y actualizada en powerbit-v3
 
+Tarea 10: Fix critico - guardados en paralelo se pisaban entre si (1.1.4)
+- Fecha: 2026-08-23
+
+Proceso completado:
+✓ Detectado: cada cambio disparaba su propio guardado (POST) de forma independiente, sin
+  ningun orden garantizado entre ellos. Si dos cambios ocurrian muy seguido (por ejemplo,
+  cargar la pagina y agregar una tarea casi al instante), el POST mas viejo podia terminar
+  de responder DESPUES que el mas nuevo y pisar tareas.xml con datos desactualizados
+✓ Arreglado: los guardados ahora se encolan (una promesa que espera a la anterior antes de
+  disparar la siguiente), garantizando que siempre se escriban en el mismo orden en que
+  ocurrieron los cambios, nunca en paralelo
+✓ Probado a proposito bajo estres: 5 tareas agregadas una atras de otra sin esperar,
+  todas terminaron guardadas correctamente en tareas.xml, coincidiendo con lo que se ve
+  en pantalla, y se mantuvieron intactas despues de recargar
+✓ Version actualizada a 1.1.4, publicada y actualizada en powerbit-v3
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 a 9
+TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 a 10
 =====================================
