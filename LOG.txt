@@ -154,6 +154,23 @@ Proceso completado:
   lo que se ve en pantalla
 ✓ Version actualizada a 1.1.6, publicada y actualizada en powerbit-v3
 
+Tarea 13: Pestañas, texto de tarea legible por tema, y textarea multilinea (1.2.0)
+- Fecha: 2026-08-23
+
+Proceso completado:
+✓ Pendientes y Completados pasan de tarjetas apiladas plegables a pestañas en la misma
+  linea horizontal, con la cantidad de tareas en cada una; se ve una lista a la vez
+✓ El texto de la tarea (no el numero) ahora usa el color de texto del tema (negro en
+  claro, blanco en oscuro) en vez del color de acento rojo/verde, en ambos grupos
+✓ Sacado el tachado (line-through) en Completados
+✓ Campo de nueva tarea: input de una linea reemplazado por un textarea de 3 renglones,
+  redimensionable arrastrando la esquina
+✓ Agregado padding inferior al contenedor para que no choque con el boton flotante de
+  Next.js (issues/overlay) en desarrollo
+✓ Probado: colores correctos en ambos temas, sin tachado, pestañas cambian de lista,
+  agregar/editar/reordenar siguen guardando bien
+✓ Version actualizada a 1.2.0, publicada y actualizada en powerbit-v3
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 a 12
+TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 a 13
 =====================================

@@ -5,8 +5,9 @@ Componente React para gestionar listas de tareas, pensado para reutilizarse en d
 ## Qué hace
 
 - CRUD de tareas: agregar, modificar, cambiar estado (pendiente/finalizado) y borrar (con confirmación).
-- Agrupa las tareas en dos secciones — **Pendientes** y **Completados** — cada una plegable/desplegable.
-- Reordenar tareas arrastrando y soltando (drag & drop), incluyendo mover una tarea de un grupo a otro (esto también cambia su estado).
+- **Pendientes** y **Completados** como pestañas en la misma línea, cada una con la cantidad de tareas; se ve una lista a la vez.
+- Campo de nueva tarea multilínea (3 renglones), redimensionable arrastrando la esquina.
+- Reordenar tareas arrastrando y soltando (drag & drop) dentro de la pestaña activa. Para mover una tarea entre Pendientes y Completados se usa el selector de estado (al estar en pestañas separadas, ya no se puede arrastrar de una a la otra).
 - Numeración automática de tareas dentro de cada grupo.
 - Responde automáticamente a tema claro/oscuro.
 - Persiste automáticamente en un archivo `tareas.xml` — sin base de datos ni SQL — cada vez que agregás, modificás, borrás, cambiás de estado o reordenás una tarea.

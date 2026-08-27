@@ -15,6 +15,7 @@ const LIGHT_COLORS = {
   pendienteAccent: "#d9534f",
   completadoAccent: "#5cb85c",
   toggleBtn: "#666666",
+  hint: "#6b6b6b",
 };
 
 const DARK_COLORS = {
@@ -29,6 +30,7 @@ const DARK_COLORS = {
   pendienteAccent: "#e57373",
   completadoAccent: "#81c784",
   toggleBtn: "#aaaaaa",
+  hint: "#a3a3a3",
 };
 
 const detectDark = () => {
@@ -50,7 +52,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
   const [tareas, setTareas] = useState([]);
   const [nuevaTarea, setNuevaTarea] = useState("");
   const [draggedIndex, setDraggedIndex] = useState(null);
-  const [expandedGroups, setExpandedGroups] = useState({ pendientes: true, finalizados: true });
+  const [activeTab, setActiveTab] = useState("pendiente");
   const [editingIndex, setEditingIndex] = useState(null);
   const [editText, setEditText] = useState("");
   const [isDark, setIsDark] = useState(false);
@@ -260,18 +262,137 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
     guardarEnServidor(nuevasTareas);
   };
 
-  const toggleGroup = (group) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [group]: !prev[group]
-    }));
-  };
+  const pendientesCount = tareas.filter((t) => t.estado === "pendiente").length;
+  const completadosCount = tareas.filter((t) => t.estado === "finalizado").length;
+
+  const renderFila = (t, i, originalIndex, accent) => (
+    <li
+      key={originalIndex}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        marginBottom: '8px',
+        padding: '8px',
+        border: `1px solid ${c.cardBorder}`,
+        borderRadius: '4px',
+        background: c.cardBg,
+        cursor: 'move'
+      }}
+      draggable
+      onDragStart={(e) => {
+        handleDragStart(e, originalIndex);
+        e.target.style.opacity = '0.5';
+      }}
+      onDragEnd={(e) => {
+        handleDragEnd(e);
+        e.target.style.opacity = '1';
+      }}
+      onDragOver={handleDragOver}
+      onDrop={(e) => handleDrop(e, originalIndex, t.estado)}
+    >
+      {editingIndex === originalIndex ? (
+        <>
+          <input
+            type="text"
+            value={editText}
+            autoFocus
+            onChange={(e) => setEditText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') guardarEdicion();
+              if (e.key === 'Escape') cancelarEdicion();
+            }}
+            style={{
+              flex: '1',
+              padding: '4px 8px',
+              background: c.inputBg,
+              color: c.inputText,
+              border: `1px solid ${c.inputBorder}`,
+              borderRadius: '4px'
+            }}
+          />
+          <button onClick={guardarEdicion} style={{
+            padding: '4px 8px',
+            cursor: 'pointer'
+          }}>Guardar</button>
+          <button onClick={cancelarEdicion} style={{
+            padding: '4px 8px',
+            cursor: 'pointer'
+          }}>Cancelar</button>
+        </>
+      ) : (
+        <>
+          <span style={{
+            fontWeight: 'bold',
+            color: accent,
+            minWidth: '30px'
+          }}>{i + 1}.</span>
+          <span style={{
+            flex: '1',
+            color: c.text
+          }}>{t.texto}</span>
+
+          <select
+            value={t.estado}
+            onChange={(e) => cambiarEstado(originalIndex, e.target.value)}
+            style={{
+              padding: '4px 8px',
+              background: c.inputBg,
+              color: c.inputText,
+              border: `1px solid ${c.inputBorder}`,
+              borderRadius: '4px'
+            }}>
+            <option value="pendiente">Pendiente</option>
+            <option value="finalizado">Finalizado</option>
+          </select>
+
+          <button onClick={() => borrarTarea(originalIndex)} style={{
+            padding: '4px 8px',
+            cursor: 'pointer'
+          }}>Borrar</button>
+          <button
+            onClick={() => iniciarEdicion(originalIndex, t.texto)}
+            style={{
+              padding: '4px 8px',
+              cursor: 'pointer'
+            }}>
+            Modificar
+          </button>
+        </>
+      )}
+    </li>
+  );
+
+  const tabStyle = (estaActiva, accent) => ({
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '10px 12px',
+    background: 'none',
+    border: 'none',
+    borderBottom: `3px solid ${estaActiva ? accent : 'transparent'}`,
+    fontSize: '1rem',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    color: estaActiva ? accent : c.toggleBtn,
+  });
+
+  const countBadgeStyle = (estaActiva, accent) => ({
+    fontVariantNumeric: 'tabular-nums',
+    fontSize: '0.75rem',
+    padding: '1px 8px',
+    borderRadius: '999px',
+    background: estaActiva ? accent : c.cardBorder,
+    color: estaActiva ? '#ffffff' : c.toggleBtn,
+  });
 
   return (
     <div style={{
       width: '100%',
       margin: '20px 0 0 0',
-      padding: '15px',
+      padding: '15px 15px 60px',
       border: `1px solid ${c.border}`,
       borderRadius: '8px',
       background: c.bg,
@@ -287,340 +408,107 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
 
       <div style={{
         display: 'flex',
-        gap: '10px',
+        flexDirection: 'column',
+        gap: '8px',
         marginBottom: '15px'
       }}>
-        <input
-          type="text"
+        <textarea
+          rows={3}
           value={nuevaTarea}
           onChange={(e) => setNuevaTarea(e.target.value)}
-          placeholder="Escribe una nueva tarea..."
+          placeholder="Descripción de la tarea..."
           style={{
-            flex: '1',
+            width: '100%',
             padding: '8px',
             background: c.inputBg,
             color: c.inputText,
             border: `1px solid ${c.inputBorder}`,
-            borderRadius: '4px'
+            borderRadius: '4px',
+            fontFamily: 'inherit',
+            resize: 'vertical'
           }}
         />
-        <button onClick={agregarTarea} style={{
-          padding: '8px 12px',
-          cursor: 'pointer',
-          backgroundColor: '#2563eb',
-          color: '#ffffff',
-          border: 'none',
-          borderRadius: '4px',
-          fontWeight: 'bold'
-        }}>Agregar</button>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px'
+        }}>
+          <span style={{ fontSize: '0.75rem', color: c.hint }}>
+            Arrastrá la esquina para agrandar el campo
+          </span>
+          <button onClick={agregarTarea} style={{
+            padding: '8px 12px',
+            cursor: 'pointer',
+            backgroundColor: '#2563eb',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '4px',
+            fontWeight: 'bold'
+          }}>Agregar</button>
+        </div>
       </div>
 
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
-        gap: '20px'
+        borderBottom: `1px solid ${c.border}`
       }}>
-        <div style={{
-          border: `1px solid ${c.cardBorder}`,
-          borderRadius: '8px',
-          padding: '15px',
-          background: c.cardBg
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '15px'
-          }}>
-            <h3 style={{
-              margin: '0 0 15px 0',
-              paddingBottom: '10px',
-              borderBottom: `2px solid ${c.pendienteAccent}`,
-              fontSize: '1.2rem',
-              color: c.pendienteAccent
-            }}>Pendientes</h3>
-            <button
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '1.2rem',
-                cursor: 'pointer',
-                padding: '5px',
-                color: c.toggleBtn,
-                transition: 'transform 0.2s'
-              }}
-              onClick={() => toggleGroup('pendientes')}
-            >
-              {expandedGroups.pendientes ? '▼' : '▶'}
-            </button>
-          </div>
-            {expandedGroups.pendientes && (
-              <ul
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, null, "pendiente")}
-                style={{
-                  listStyle: 'none',
-                  padding: '0',
-                  minHeight: '20px'
-                }}>
+        <button
+          role="tab"
+          aria-selected={activeTab === "pendiente"}
+          onClick={() => setActiveTab("pendiente")}
+          style={tabStyle(activeTab === "pendiente", c.pendienteAccent)}
+        >
+          Pendientes
+          <span style={countBadgeStyle(activeTab === "pendiente", c.pendienteAccent)}>{pendientesCount}</span>
+        </button>
+        <button
+          role="tab"
+          aria-selected={activeTab === "finalizado"}
+          onClick={() => setActiveTab("finalizado")}
+          style={tabStyle(activeTab === "finalizado", c.completadoAccent)}
+        >
+          Completados
+          <span style={countBadgeStyle(activeTab === "finalizado", c.completadoAccent)}>{completadosCount}</span>
+        </button>
+      </div>
+
+      <div style={{ paddingTop: '14px' }}>
+        {activeTab === "pendiente" ? (
+          <ul
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, null, "pendiente")}
+            style={{
+              listStyle: 'none',
+              padding: '0',
+              minHeight: '20px'
+            }}>
             {Array.isArray(tareas) &&
               tareas
                 .filter((t) => t.estado === "pendiente")
                 .map((t, i) => {
                   const originalIndex = tareas.findIndex((task) => task === t);
-                  return (
-                    <li
-                      key={originalIndex}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        marginBottom: '8px',
-                        padding: '8px',
-                        border: `1px solid ${c.cardBorder}`,
-                        borderRadius: '4px',
-                        background: c.cardBg,
-                        cursor: 'move'
-                      }}
-                      draggable
-                      onDragStart={(e) => {
-                        handleDragStart(e, originalIndex);
-                        e.target.style.opacity = '0.5';
-                      }}
-                      onDragEnd={(e) => {
-                        handleDragEnd(e);
-                        e.target.style.opacity = '1';
-                      }}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, originalIndex, "pendiente")}
-                    >
-                      {editingIndex === originalIndex ? (
-                        <>
-                          <input
-                            type="text"
-                            value={editText}
-                            autoFocus
-                            onChange={(e) => setEditText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') guardarEdicion();
-                              if (e.key === 'Escape') cancelarEdicion();
-                            }}
-                            style={{
-                              flex: '1',
-                              padding: '4px 8px',
-                              background: c.inputBg,
-                              color: c.inputText,
-                              border: `1px solid ${c.inputBorder}`,
-                              borderRadius: '4px'
-                            }}
-                          />
-                          <button onClick={guardarEdicion} style={{
-                            padding: '4px 8px',
-                            cursor: 'pointer'
-                          }}>Guardar</button>
-                          <button onClick={cancelarEdicion} style={{
-                            padding: '4px 8px',
-                            cursor: 'pointer'
-                          }}>Cancelar</button>
-                        </>
-                      ) : (
-                        <>
-                          <span style={{
-                            fontWeight: 'bold',
-                            color: c.pendienteAccent,
-                            minWidth: '30px'
-                          }}>{i + 1}.</span>
-                          <span style={{
-                            flex: '1',
-                            color: c.pendienteAccent
-                          }}>{t.texto}</span>
-
-                          <select
-                            value={t.estado}
-                            onChange={(e) => cambiarEstado(originalIndex, e.target.value)}
-                            style={{
-                              padding: '4px 8px',
-                              background: c.inputBg,
-                              color: c.inputText,
-                              border: `1px solid ${c.inputBorder}`,
-                              borderRadius: '4px'
-                            }}>
-                            <option value="pendiente">Pendiente</option>
-                            <option value="finalizado">Finalizado</option>
-                          </select>
-
-                          <button onClick={() => borrarTarea(originalIndex)} style={{
-                            padding: '4px 8px',
-                            cursor: 'pointer'
-                          }}>Borrar</button>
-                          <button
-                            onClick={() => iniciarEdicion(originalIndex, t.texto)}
-                            style={{
-                              padding: '4px 8px',
-                              cursor: 'pointer'
-                            }}>
-                            Modificar
-                          </button>
-                        </>
-                      )}
-                    </li>
-                  );
+                  return renderFila(t, i, originalIndex, c.pendienteAccent);
                 })}
-            </ul>
-          )}
-        </div>
-
-        <div style={{
-          border: `1px solid ${c.cardBorder}`,
-          borderRadius: '8px',
-          padding: '15px',
-          background: c.cardBg
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '15px'
-          }}>
-            <h3 style={{
-              margin: '0 0 15px 0',
-              paddingBottom: '10px',
-              borderBottom: `2px solid ${c.completadoAccent}`,
-              fontSize: '1.2rem',
-              color: c.completadoAccent
-            }}>Completados</h3>
-            <button
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '1.2rem',
-                cursor: 'pointer',
-                padding: '5px',
-                color: c.toggleBtn,
-                transition: 'transform 0.2s'
-              }}
-              onClick={() => toggleGroup('finalizados')}
-            >
-              {expandedGroups.finalizados ? '▼' : '▶'}
-            </button>
-          </div>
-          {expandedGroups.finalizados && (
-            <ul
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, null, "finalizado")}
-              style={{
-                listStyle: 'none',
-                padding: '0',
-                minHeight: '20px'
-              }}>
+          </ul>
+        ) : (
+          <ul
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, null, "finalizado")}
+            style={{
+              listStyle: 'none',
+              padding: '0',
+              minHeight: '20px'
+            }}>
             {Array.isArray(tareas) &&
               tareas
                 .filter((t) => t.estado === "finalizado")
                 .map((t, i) => {
                   const originalIndex = tareas.findIndex((task) => task === t);
-                  return (
-                    <li
-                      key={originalIndex}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        marginBottom: '8px',
-                        padding: '8px',
-                        border: `1px solid ${c.cardBorder}`,
-                        borderRadius: '4px',
-                        background: c.cardBg,
-                        cursor: 'move'
-                      }}
-                      draggable
-                      onDragStart={(e) => {
-                        handleDragStart(e, originalIndex);
-                        e.target.style.opacity = '0.5';
-                      }}
-                      onDragEnd={(e) => {
-                        handleDragEnd(e);
-                        e.target.style.opacity = '1';
-                      }}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, originalIndex, "finalizado")}
-                    >
-                      {editingIndex === originalIndex ? (
-                        <>
-                          <input
-                            type="text"
-                            value={editText}
-                            autoFocus
-                            onChange={(e) => setEditText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') guardarEdicion();
-                              if (e.key === 'Escape') cancelarEdicion();
-                            }}
-                            style={{
-                              flex: '1',
-                              padding: '4px 8px',
-                              background: c.inputBg,
-                              color: c.inputText,
-                              border: `1px solid ${c.inputBorder}`,
-                              borderRadius: '4px'
-                            }}
-                          />
-                          <button onClick={guardarEdicion} style={{
-                            padding: '4px 8px',
-                            cursor: 'pointer'
-                          }}>Guardar</button>
-                          <button onClick={cancelarEdicion} style={{
-                            padding: '4px 8px',
-                            cursor: 'pointer'
-                          }}>Cancelar</button>
-                        </>
-                      ) : (
-                        <>
-                          <span style={{
-                            fontWeight: 'bold',
-                            color: c.completadoAccent,
-                            minWidth: '30px',
-                            textDecoration: 'line-through'
-                          }}>{i + 1}.</span>
-                          <span style={{
-                            flex: '1',
-                            color: c.completadoAccent,
-                            textDecoration: 'line-through'
-                          }}>{t.texto}</span>
-
-                          <select
-                            value={t.estado}
-                            onChange={(e) => cambiarEstado(originalIndex, e.target.value)}
-                            style={{
-                              padding: '4px 8px',
-                              background: c.inputBg,
-                              color: c.inputText,
-                              border: `1px solid ${c.inputBorder}`,
-                              borderRadius: '4px'
-                            }}>
-                            <option value="pendiente">Pendiente</option>
-                            <option value="finalizado">Finalizado</option>
-                          </select>
-
-                          <button onClick={() => borrarTarea(originalIndex)} style={{
-                            padding: '4px 8px',
-                            cursor: 'pointer'
-                          }}>Borrar</button>
-                          <button
-                            onClick={() => iniciarEdicion(originalIndex, t.texto)}
-                            style={{
-                              padding: '4px 8px',
-                              cursor: 'pointer'
-                            }}>
-                            Modificar
-                          </button>
-                        </>
-                      )}
-                    </li>
-                  );
+                  return renderFila(t, i, originalIndex, c.completadoAccent);
                 })}
-            </ul>
-          )}
-        </div>
+          </ul>
+        )}
       </div>
     </div>
   );
