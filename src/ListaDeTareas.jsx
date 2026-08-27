@@ -15,7 +15,6 @@ const LIGHT_COLORS = {
   pendienteAccent: "#d9534f",
   completadoAccent: "#5cb85c",
   toggleBtn: "#666666",
-  hint: "#6b6b6b",
 };
 
 const DARK_COLORS = {
@@ -30,7 +29,6 @@ const DARK_COLORS = {
   pendienteAccent: "#e57373",
   completadoAccent: "#81c784",
   toggleBtn: "#aaaaaa",
-  hint: "#a3a3a3",
 };
 
 const detectDark = () => {
@@ -392,7 +390,7 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
     <div style={{
       width: '100%',
       margin: '20px 0 0 0',
-      padding: '15px 15px 60px',
+      padding: '15px 15px 120px',
       border: `1px solid ${c.border}`,
       borderRadius: '8px',
       background: c.bg,
@@ -431,12 +429,8 @@ const ListaDeTareas = ({ apiEndpoint = "/api/tareas" } = {}) => {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '10px'
+          justifyContent: 'center'
         }}>
-          <span style={{ fontSize: '0.75rem', color: c.hint }}>
-            Arrastrá la esquina para agrandar el campo
-          </span>
           <button onClick={agregarTarea} style={{
             padding: '8px 12px',
             cursor: 'pointer',

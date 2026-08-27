@@ -171,6 +171,15 @@ Proceso completado:
   agregar/editar/reordenar siguen guardando bien
 ✓ Version actualizada a 1.2.0, publicada y actualizada en powerbit-v3
 
+Tarea 14: Ajustes de layout - mas padding inferior, sacar hint, boton centrado (1.2.1)
+- Fecha: 2026-08-23
+
+Proceso completado:
+✓ Padding inferior del contenedor de 60px a 120px
+✓ Sacado el texto "Arrastrá la esquina para agrandar el campo"
+✓ Boton Agregar centrado (antes quedaba a la derecha, al lado del hint)
+✓ Version actualizada a 1.2.1, publicada y actualizada en powerbit-v3
+
 =====================================
-TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 a 13
+TIEMPO TOTAL ACUMULADO: 23 minutos + tareas 4 a 14
 =====================================
