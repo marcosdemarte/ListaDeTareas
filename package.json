@@ -4,9 +4,9 @@
   "scripts": {
     "build": "babel src --out-dir dist && copy tareas.xml dist\\"
   },
-  "main": "src/ListaDeTareas.jsx",
+  "main": "src/ListaDeTareas.js",
   "exports": {
-    ".": "./src/ListaDeTareas.jsx"
+    ".": "./src/ListaDeTareas.js"
   },
   "author": "Marcos Demarte",
   "license": "MIT",
