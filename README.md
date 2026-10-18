@@ -10,11 +10,9 @@ npm install github:marcosdemarte/ListaDeTareas
 npm update @marcosdemarte/lista-de-tareas
 
 import ListaDeTareas from "@marcosdemarte/lista-de-tareas";
-
 <ListaDeTareas />
 
 next.config.ts
 transpilePackages: [
-"@marcosdemarte/portafolio",
 "@marcosdemarte/lista-de-tareas"
 ],

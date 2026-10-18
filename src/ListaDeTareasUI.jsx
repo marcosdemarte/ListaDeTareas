@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { obtenerTareasXML, guardarTareasXML } from "./actions";
 
 export default function ListaDeTareasUI() {
   const [tareas, setTareas] = useState([]);
@@ -8,24 +9,21 @@ export default function ListaDeTareasUI() {
   const [filtro, setFiltro] = useState("pendiente");
 
   useEffect(() => {
-    fetch("/api/tareas")
-      .then((res) => res.text())
-      .then((xmlText) => {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-        const tareaNodes = xmlDoc.getElementsByTagName("tarea");
-        const loadedTareas = [];
+    obtenerTareasXML().then((xmlText) => {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+      const tareaNodes = xmlDoc.getElementsByTagName("tarea");
+      const loadedTareas = [];
 
-        for (let i = 0; i < tareaNodes.length; i++) {
-          loadedTareas.push({
-            id: i + 1,
-            texto: tareaNodes[i].textContent,
-            estado: tareaNodes[i].getAttribute("estado") || "pendiente",
-          });
-        }
-        setTareas(loadedTareas);
-      })
-      .catch((err) => console.error("Error cargando tareas:", err));
+      for (let i = 0; i < tareaNodes.length; i++) {
+        loadedTareas.push({
+          id: i + 1,
+          texto: tareaNodes[i].textContent,
+          estado: tareaNodes[i].getAttribute("estado") || "pendiente",
+        });
+      }
+      setTareas(loadedTareas);
+    });
   }, []);
 
   const guardarEnXML = async (updatedTareas) => {
@@ -35,15 +33,7 @@ export default function ListaDeTareasUI() {
     });
     xmlString += "</tareas>";
 
-    try {
-      await fetch("/api/tareas", {
-        method: "POST",
-        headers: { "Content-Type": "application/xml" },
-        body: xmlString,
-      });
-    } catch (err) {
-      console.error("Error guardando tareas:", err);
-    }
+    await guardarTareasXML(xmlString);
   };
 
   const agregarTarea = (e) => {
