@@ -11,8 +11,7 @@ export default function ListaDeTareasUI() {
   const [textoEditado, setTextoEditado] = useState("");
   const [guardando, setGuardando] = useState(false);
 
-  // Estados y referencias para el Drag and Drop avanzado con líneas punteadas
-  const [draggedIndex, setDraggedIndex] = useState(null);
+  const draggedIndex = useRef(null);
   const [overIndex, setOverIndex] = useState(null);
 
   useEffect(() => {
@@ -102,31 +101,37 @@ export default function ListaDeTareasUI() {
     await sincronizarConXML(updated);
   };
 
-  // Manejadores de Drag and Drop con desplazamiento y espacio punteado
+  // Funciones de Drag and Drop optimizadas para evitar cursores de error o parpadeos
   const handleDragStart = (e, index) => {
-    setDraggedIndex(index);
+    draggedIndex.current = index;
     e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", index);
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
   };
 
   const handleDragOver = (e, index) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    if (draggedIndex !== index) {
+    if (draggedIndex.current !== index) {
       setOverIndex(index);
     }
   };
 
-  const handleDragLeave = () => {
-    setOverIndex(null);
-  };
-
   const handleDrop = async (e, targetIndex) => {
     e.preventDefault();
-    if (guardando || draggedIndex === null) return;
+    if (guardando || draggedIndex.current === null) return;
+
+    const sourceIndex = draggedIndex.current;
+    if (sourceIndex === targetIndex) return;
 
     const tareasFiltradasIds = tareas.filter((t) => t.estado === filtro);
-    const itemMovido = tareasFiltradasIds[draggedIndex];
+    const itemMovido = tareasFiltradasIds[sourceIndex];
     const targetItem = tareasFiltradasIds[targetIndex];
+
+    if (!itemMovido || !targetItem) return;
 
     const indiceRealSource = tareas.findIndex((t) => t.id === itemMovido.id);
     const indiceRealTarget = tareas.findIndex((t) => t.id === targetItem.id);
@@ -135,14 +140,14 @@ export default function ListaDeTareasUI() {
     const [removido] = copia.splice(indiceRealSource, 1);
     copia.splice(indiceRealTarget, 0, removido);
 
-    setDraggedIndex(null);
+    draggedIndex.current = null;
     setOverIndex(null);
     setTareas(copia);
     await sincronizarConXML(copia);
   };
 
   const handleDragEnd = () => {
-    setDraggedIndex(null);
+    draggedIndex.current = null;
     setOverIndex(null);
   };
 
@@ -317,7 +322,7 @@ export default function ListaDeTareasUI() {
         </button>
       </div>
 
-      {/* Lista de Tareas con Espacio Punteado de Arraste y Padding Bottom de 50px */}
+      {/* Lista de Tareas con Arraste Fluido */}
       <div
         style={{
           display: "flex",
@@ -336,13 +341,13 @@ export default function ListaDeTareasUI() {
           </div>
         ) : (
           tareasFiltradas.map((t, index) => {
-            const isBeingDragged = draggedIndex === index;
-            const isDropTarget = overIndex === index && draggedIndex !== index;
+            const isBeingDragged = draggedIndex.current === index;
+            const isDropTarget =
+              overIndex === index && draggedIndex.current !== index;
 
             return (
               <React.Fragment key={t.id}>
-                {/* Indicador de espacio punteado si se está arrastrando justo antes de este ítem */}
-                {isDropTarget && draggedIndex > index && (
+                {isDropTarget && draggedIndex.current > index && (
                   <div
                     style={{
                       border: "2px dashed #555",
@@ -357,8 +362,8 @@ export default function ListaDeTareasUI() {
                 <div
                   draggable={editandoId !== t.id}
                   onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnter={handleDragEnter}
                   onDragOver={(e) => handleDragOver(e, index)}
-                  onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
                   style={{
@@ -528,8 +533,7 @@ export default function ListaDeTareasUI() {
                   </div>
                 </div>
 
-                {/* Indicador de espacio punteado si se está arrastrando justo después de este ítem */}
-                {isDropTarget && draggedIndex < index && (
+                {isDropTarget && draggedIndex.current < index && (
                   <div
                     style={{
                       border: "2px dashed #555",
