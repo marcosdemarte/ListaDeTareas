@@ -21,7 +21,7 @@ export async function obtenerTareasXML() {
     try {
         await asegurarArchivo();
         return await readFile(filePath, "utf-8");
-    } catch (error) {
+    } catch {
         return "<tareas></tareas>";
     }
 }
@@ -32,7 +32,7 @@ export async function guardarTareasXML(xmlContent) {
         if (!xmlContent.trim().startsWith("<tareas")) return false;
         await writeFile(filePath, xmlContent, "utf-8");
         return true;
-    } catch (error) {
+    } catch {
         return false;
     }
 }

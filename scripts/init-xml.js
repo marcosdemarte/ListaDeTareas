@@ -14,7 +14,7 @@ try {
     if (!fs.existsSync(targetFile)) {
         if (fs.existsSync(templateFile)) {
             fs.copyFileSync(templateFile, targetFile);
-            console.log('✅ Archivo data/tareas.xml inicializado con la tarea por defecto.');
+            console.log('✅ Archivo data/tareas.xml creado automáticamente.');
         }
     } else {
         console.log('ℹ️ El archivo data/tareas.xml ya existe. Se conserva intacto.');

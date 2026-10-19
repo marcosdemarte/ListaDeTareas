@@ -31,7 +31,6 @@ export default function ListaDeTareasUI() {
   const guardarEnXML = async (updatedTareas) => {
     let xmlString = "<tareas>\n";
     updatedTareas.forEach((t) => {
-      // Escape básico para XML si es necesario
       const textoEscaped = t.texto
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -70,12 +69,12 @@ export default function ListaDeTareasUI() {
     guardarEnXML(updated);
   };
 
-  const iniciarEdicion = (t) => {
+  const iniciarModificacion = (t) => {
     setEditandoId(t.id);
     setTextoEditado(t.texto);
   };
 
-  const guardarEdicion = (id) => {
+  const guardarModificacion = (id) => {
     const updated = tareas.map((t) =>
       t.id === id ? { ...t, texto: textoEditado.trim() } : t,
     );
@@ -85,270 +84,301 @@ export default function ListaDeTareasUI() {
     guardarEnXML(updated);
   };
 
-  const moverTarea = (index, direccion) => {
-    const tareasFiltradasIds = tareas.filter((t) => t.estado === filtro);
-    const itemAMover = tareasFiltradasIds[index];
-    const indiceReal = tareas.findIndex((t) => t.id === itemAMover.id);
-
-    const nuevoIndiceReal =
-      direccion === "arriba" ? indiceReal - 1 : indiceReal + 1;
-    if (nuevoIndiceReal < 0 || nuevoIndiceReal >= tareas.length) return;
-
-    const copia = [...tareas];
-    const [removido] = copia.splice(indiceReal, 1);
-    copia.splice(nuevoIndiceReal, 0, removido);
-
-    setTareas(copia);
-    guardarEnXML(copia);
-  };
-
-  const tareasFiltradas = tareas.filter((t) => t.estado === filtro);
+  const tareasPendientes = tareas.filter((t) => t.estado === "pendiente");
+  const tareasCompletadas = tareas.filter(
+    (t) => t.estado === "finalizado" || t.estado === "completado",
+  );
+  const tareasFiltradas =
+    filtro === "pendiente" ? tareasPendientes : tareasCompletadas;
 
   return (
     <div
       style={{
-        background: "#121212",
+        background: "#1c1c1c",
         color: "#e0e0e0",
-        padding: "24px",
-        borderRadius: "12px",
-        margin: "20px auto",
-        maxWidth: "800px",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-        fontFamily: "sans-serif",
-        border: "1px solid #2a2a2a",
+        padding: "20px 30px",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        border: "1px solid #2d2d2d",
+        width: "100%",
+        boxSizing: "border-box",
       }}>
       <h2
         style={{
           textAlign: "center",
+          color: "#ffffff",
+          fontSize: "1.75rem",
+          fontWeight: "bold",
+          marginTop: 0,
           marginBottom: "20px",
-          color: "#fff",
-          fontSize: "1.5rem",
         }}>
-        Lista de Tareas (Desarrollo Local)
+        Lista de Tareas
       </h2>
 
-      {/* Formulario para agregar */}
+      {/* Formulario con Textarea y Botón Centrado */}
       <form
         onSubmit={agregarTarea}
-        style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
-        <input
-          type="text"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "15px",
+          marginBottom: "25px",
+        }}>
+        <textarea
           value={nuevaTarea}
           onChange={(e) => setNuevaTarea(e.target.value)}
-          placeholder="Escribe una nueva tarea..."
+          placeholder="Descripción de la tarea..."
+          rows={3}
           style={{
-            flex: 1,
+            width: "100%",
             padding: "12px 16px",
-            background: "#1e1e1e",
-            color: "#fff",
-            border: "1px solid #333",
-            borderRadius: "8px",
+            background: "#282828",
+            color: "#e0e0e0",
+            border: "1px solid #3a3a3a",
+            borderRadius: "4px",
             outline: "none",
-            fontSize: "0.95rem",
+            fontSize: "1rem",
+            resize: "vertical",
+            boxSizing: "border-box",
           }}
         />
         <button
           type="submit"
           style={{
-            padding: "12px 24px",
+            padding: "8px 30px",
             background: "#2563eb",
-            color: "#fff",
+            color: "#ffffff",
             border: "none",
-            borderRadius: "8px",
+            borderRadius: "4px",
             cursor: "pointer",
-            fontWeight: "600",
-            transition: "background 0.2s",
+            fontWeight: "bold",
+            fontSize: "1rem",
           }}>
           Agregar
         </button>
       </form>
 
-      {/* Pestañas de filtrado */}
+      {/* Navegación de Filtros */}
       <div
         style={{
           display: "flex",
-          justifyContent: "center",
-          gap: "16px",
-          marginBottom: "20px",
-          borderBottom: "1px solid #2a2a2a",
-          paddingBottom: "12px",
+          borderBottom: "1px solid #333333",
+          marginBottom: "15px",
         }}>
         <button
           onClick={() => setFiltro("pendiente")}
           style={{
-            background: "transparent",
+            flex: 1,
+            padding: "10px 0",
+            background: "none",
             border: "none",
-            color: filtro === "pendiente" ? "#f87171" : "#888",
-            cursor: "pointer",
+            borderBottom:
+              filtro === "pendiente"
+                ? "2px solid #ef4444"
+                : "2px solid transparent",
+            color: filtro === "pendiente" ? "#ef4444" : "#a1a1aa",
             fontWeight: "bold",
+            cursor: "pointer",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "8px",
             fontSize: "1rem",
           }}>
-          Pendientes ({tareas.filter((t) => t.estado === "pendiente").length})
+          Pendientes
+          <span
+            style={{
+              background: "#ef4444",
+              color: "#fff",
+              padding: "2px 8px",
+              borderRadius: "12px",
+              fontSize: "0.8rem",
+            }}>
+            {tareasPendientes.length}
+          </span>
         </button>
         <button
           onClick={() => setFiltro("finalizado")}
           style={{
-            background: "transparent",
+            flex: 1,
+            padding: "10px 0",
+            background: "none",
             border: "none",
-            color: filtro === "finalizado" ? "#4ade80" : "#888",
-            cursor: "pointer",
+            borderBottom:
+              filtro === "finalizado"
+                ? "2px solid #3b82f6"
+                : "2px solid transparent",
+            color: filtro === "finalizado" ? "#3b82f6" : "#a1a1aa",
             fontWeight: "bold",
+            cursor: "pointer",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "8px",
             fontSize: "1rem",
           }}>
-          Finalizados ({tareas.filter((t) => t.estado === "finalizado").length})
+          Completados
+          <span
+            style={{
+              background: "#52525b",
+              color: "#d4d4d8",
+              padding: "2px 8px",
+              borderRadius: "12px",
+              fontSize: "0.8rem",
+            }}>
+            {tareasCompletadas.length}
+          </span>
         </button>
       </div>
 
-      {/* Listado de tareas */}
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      {/* Lista de Tareas */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {tareasFiltradas.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#666", padding: "20px" }}>
+          <div
+            style={{
+              textAlign: "center",
+              color: "#71717a",
+              padding: "20px 0",
+            }}>
             No hay tareas en esta categoría.
-          </p>
+          </div>
         ) : (
           tareasFiltradas.map((t, index) => (
-            <li
+            <div
               key={t.id}
               style={{
                 display: "flex",
-                justifyContent: "space-between",
                 alignItems: "center",
-                background: "#1a1a1a",
-                padding: "12px 16px",
-                marginBottom: "10px",
-                borderRadius: "8px",
+                justifyContent: "space-between",
+                background: "#222222",
                 border: "1px solid #2a2a2a",
-                gap: "12px",
+                padding: "10px 16px",
+                borderRadius: "4px",
+                gap: "15px",
               }}>
-              {/* Ordenar arriba/abajo */}
+              {/* Número y Texto */}
               <div
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
+                  alignItems: "baseline",
+                  gap: "10px",
+                  flex: 1,
                 }}>
-                <button
-                  onClick={() => moverTarea(index, "arriba")}
-                  disabled={index === 0}
+                <span
                   style={{
-                    background: "none",
-                    border: "none",
-                    color: index === 0 ? "#444" : "#aaa",
-                    cursor: index === 0 ? "default" : "pointer",
-                    fontSize: "10px",
+                    color: "#ef4444",
+                    fontWeight: "bold",
+                    fontSize: "1.05rem",
                   }}>
-                  ▲
-                </button>
-                <button
-                  onClick={() => moverTarea(index, "abajo")}
-                  disabled={index === tareasFiltradas.length - 1}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color:
-                      index === tareasFiltradas.length - 1 ? "#444" : "#aaa",
-                    cursor:
-                      index === tareasFiltradas.length - 1
-                        ? "default"
-                        : "pointer",
-                    fontSize: "10px",
-                  }}>
-                  ▼
-                </button>
-              </div>
+                  {index + 1}.
+                </span>
 
-              {/* Texto o Input de edición */}
-              <div style={{ flex: 1, wordBreak: "break-word" }}>
                 {editandoId === t.id ? (
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ display: "flex", gap: "8px", flex: 1 }}>
                     <input
                       type="text"
                       value={textoEditado}
                       onChange={(e) => setTextoEditado(e.target.value)}
                       style={{
                         flex: 1,
-                        padding: "6px 10px",
-                        background: "#2a2a2a",
+                        background: "#333",
                         color: "#fff",
                         border: "1px solid #555",
+                        padding: "4px 8px",
                         borderRadius: "4px",
                       }}
                     />
                     <button
-                      onClick={() => guardarEdicion(t.id)}
+                      onClick={() => guardarModificacion(t.id)}
                       style={{
                         background: "#16a34a",
                         color: "#fff",
                         border: "none",
-                        padding: "6px 12px",
+                        padding: "4px 10px",
                         borderRadius: "4px",
                         cursor: "pointer",
                       }}>
-                      Guardar
+                      OK
                     </button>
                   </div>
                 ) : (
                   <span
                     style={{
+                      color:
+                        t.estado === "finalizado" || t.estado === "completado"
+                          ? "#a1a1aa"
+                          : "#ffffff",
+                      fontSize: "1rem",
                       textDecoration:
-                        t.estado === "finalizado" ? "line-through" : "none",
-                      color: t.estado === "finalizado" ? "#777" : "#fff",
+                        t.estado === "finalizado" || t.estado === "completado"
+                          ? "line-through"
+                          : "none",
                     }}>
-                    {index + 1}. {t.texto}
+                    {t.texto}
                   </span>
                 )}
               </div>
 
-              {/* Acciones */}
+              {/* Select & Botones de Acción */}
               <div
-                style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <select
-                  value={t.estado}
-                  onChange={(e) => cambiarEstado(t.id, e.target.value)}
+                  value={t.estado === "finalizado" ? "completado" : t.estado}
+                  onChange={(e) =>
+                    cambiarEstado(
+                      t.id,
+                      e.target.value === "completado"
+                        ? "finalizado"
+                        : "pendiente",
+                    )
+                  }
                   style={{
                     background: "#2a2a2a",
-                    color: "#fff",
-                    border: "1px solid #444",
-                    padding: "6px",
-                    borderRadius: "6px",
+                    color: "#e0e0e0",
+                    border: "1px solid #404040",
+                    padding: "4px 8px",
+                    borderRadius: "4px",
                     cursor: "pointer",
+                    fontSize: "0.9rem",
                   }}>
                   <option value="pendiente">Pendiente</option>
-                  <option value="finalizado">Finalizado</option>
+                  <option value="completado">Completado</option>
                 </select>
-
-                {editandoId !== t.id && (
-                  <button
-                    onClick={() => iniciarEdicion(t)}
-                    style={{
-                      background: "#d97706",
-                      color: "#fff",
-                      border: "none",
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                    }}>
-                    Editar
-                  </button>
-                )}
 
                 <button
                   onClick={() => borrarTarea(t.id)}
                   style={{
-                    background: "#dc2626",
-                    color: "#fff",
+                    background: "none",
                     border: "none",
-                    padding: "6px 10px",
-                    borderRadius: "6px",
+                    color: "#a1a1aa",
                     cursor: "pointer",
-                  }}>
+                    fontSize: "0.9rem",
+                  }}
+                  onMouseOver={(e) => (e.target.style.color = "#ef4444")}
+                  onMouseOut={(e) => (e.target.style.color = "#a1a1aa")}>
                   Borrar
                 </button>
+
+                {editandoId !== t.id && (
+                  <button
+                    onClick={() => iniciarModificacion(t)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#a1a1aa",
+                      cursor: "pointer",
+                      fontSize: "0.9rem",
+                    }}
+                    onMouseOver={(e) => (e.target.style.color = "#ffffff")}
+                    onMouseOut={(e) => (e.target.style.color = "#a1a1aa")}>
+                    Modificar
+                  </button>
+                )}
               </div>
-            </li>
+            </div>
           ))
         )}
-      </ul>
+      </div>
     </div>
   );
 }
