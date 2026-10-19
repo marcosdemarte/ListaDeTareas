@@ -45,6 +45,22 @@ export default function ListaDeTareasUI() {
     xmlString += "</tareas>";
 
     await guardarTareasXML(xmlString);
+
+    // Recargamos formalmente desde el XML tras guardar para sincronizar por completo
+    const xmlText = await obtenerTareasXML();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+    const tareaNodes = xmlDoc.getElementsByTagName("tarea");
+    const reloadedTareas = [];
+
+    for (let i = 0; i < tareaNodes.length; i++) {
+      reloadedTareas.push({
+        id: i + 1,
+        texto: tareaNodes[i].textContent,
+        estado: tareaNodes[i].getAttribute("estado") || "pendiente",
+      });
+    }
+    setTareas(reloadedTareas);
     setGuardando(false);
   };
 
@@ -56,7 +72,6 @@ export default function ListaDeTareasUI() {
       ...tareas,
       { id: Date.now(), texto: nuevaTarea.trim(), estado: "pendiente" },
     ];
-    setTareas(updated);
     setNuevaTarea("");
     await sincronizarConXML(updated);
   };
@@ -66,7 +81,6 @@ export default function ListaDeTareasUI() {
     const updated = tareas.map((t) =>
       t.id === id ? { ...t, estado: nuevoEstado } : t,
     );
-    setTareas(updated);
     await sincronizarConXML(updated);
   };
 
@@ -76,7 +90,6 @@ export default function ListaDeTareasUI() {
     if (!confirmado) return;
 
     const updated = tareas.filter((t) => t.id !== id);
-    setTareas(updated);
     await sincronizarConXML(updated);
   };
 
@@ -95,17 +108,15 @@ export default function ListaDeTareasUI() {
     const updated = tareas.map((t) =>
       t.id === id ? { ...t, texto: textoEditado.trim() } : t,
     );
-    setTareas(updated);
     setEditandoId(null);
     setTextoEditado("");
     await sincronizarConXML(updated);
   };
 
-  // Funciones de Drag and Drop optimizadas para evitar cursores de error o parpadeos
+  // Manejadores de Drag and Drop robustos
   const handleDragStart = (e, index) => {
     draggedIndex.current = index;
     e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", index);
   };
 
   const handleDragEnter = (e) => {
@@ -125,24 +136,27 @@ export default function ListaDeTareasUI() {
     if (guardando || draggedIndex.current === null) return;
 
     const sourceIndex = draggedIndex.current;
+    draggedIndex.current = null;
+    setOverIndex(null);
+
     if (sourceIndex === targetIndex) return;
 
-    const tareasFiltradasIds = tareas.filter((t) => t.estado === filtro);
-    const itemMovido = tareasFiltradasIds[sourceIndex];
-    const targetItem = tareasFiltradasIds[targetIndex];
+    const tareasFiltradas =
+      filtro === "pendiente" ? tareasPendientes : tareasCompletadas;
+    const itemMovido = tareasFiltradas[sourceIndex];
+    const targetItem = tareasFiltradas[targetIndex];
 
     if (!itemMovido || !targetItem) return;
 
     const indiceRealSource = tareas.findIndex((t) => t.id === itemMovido.id);
     const indiceRealTarget = tareas.findIndex((t) => t.id === targetItem.id);
 
+    if (indiceRealSource === -1 || indiceRealTarget === -1) return;
+
     const copia = [...tareas];
     const [removido] = copia.splice(indiceRealSource, 1);
     copia.splice(indiceRealTarget, 0, removido);
 
-    draggedIndex.current = null;
-    setOverIndex(null);
-    setTareas(copia);
     await sincronizarConXML(copia);
   };
 
@@ -188,7 +202,7 @@ export default function ListaDeTareasUI() {
             fontSize: "0.8rem",
             zIndex: 10,
           }}>
-          Guardando cambios...
+          Guardando cambios en XML...
         </div>
       )}
 
@@ -248,12 +262,13 @@ export default function ListaDeTareasUI() {
         </button>
       </form>
 
-      {/* Navegación de Filtros */}
+      {/* Navegación de Filtros Horizontal con Bordes y Píldoras Alineadas */}
       <div
         style={{
           display: "flex",
           borderBottom: "1px solid #333333",
           marginBottom: "15px",
+          width: "100%",
         }}>
         <button
           onClick={() => setFiltro("pendiente")}
@@ -270,12 +285,14 @@ export default function ListaDeTareasUI() {
             fontWeight: "bold",
             cursor: "pointer",
             display: "flex",
+            flexDirection: "row",
             justifyContent: "center",
             alignItems: "center",
-            gap: "8px",
+            gap: "10px",
             fontSize: "1rem",
+            boxSizing: "border-box",
           }}>
-          Pendientes
+          <span>Pendientes</span>
           <span
             style={{
               background: filtro === "pendiente" ? "#ef4444" : "#3f3f46",
@@ -283,6 +300,8 @@ export default function ListaDeTareasUI() {
               padding: "2px 10px",
               borderRadius: "12px",
               fontSize: "0.8rem",
+              display: "inline-block",
+              lineHeight: "normal",
             }}>
             {tareasPendientes.length}
           </span>
@@ -302,12 +321,14 @@ export default function ListaDeTareasUI() {
             fontWeight: "bold",
             cursor: "pointer",
             display: "flex",
+            flexDirection: "row",
             justifyContent: "center",
             alignItems: "center",
-            gap: "8px",
+            gap: "10px",
             fontSize: "1rem",
+            boxSizing: "border-box",
           }}>
-          Completados
+          <span>Completados</span>
           <span
             style={{
               background: filtro === "finalizado" ? "#4ade80" : "#3f3f46",
@@ -316,13 +337,15 @@ export default function ListaDeTareasUI() {
               borderRadius: "12px",
               fontSize: "0.8rem",
               fontWeight: "bold",
+              display: "inline-block",
+              lineHeight: "normal",
             }}>
             {tareasCompletadas.length}
           </span>
         </button>
       </div>
 
-      {/* Lista de Tareas con Arraste Fluido */}
+      {/* Lista de Tareas con Línea Punteada Horizontal de Medidas Exactas */}
       <div
         style={{
           display: "flex",
@@ -352,9 +375,11 @@ export default function ListaDeTareasUI() {
                     style={{
                       border: "2px dashed #555",
                       borderRadius: "4px",
-                      height: "46px",
+                      width: "100%",
+                      height: "48px",
                       background: "rgba(255,255,255,0.02)",
                       margin: "2px 0",
+                      boxSizing: "border-box",
                     }}
                   />
                 )}
@@ -377,7 +402,8 @@ export default function ListaDeTareasUI() {
                     gap: "15px",
                     cursor: editandoId !== t.id ? "grab" : "default",
                     opacity: isBeingDragged ? 0.4 : 1,
-                    transition: "transform 0.2s ease, opacity 0.2s ease",
+                    boxSizing: "border-box",
+                    width: "100%",
                   }}>
                   {/* Número y Texto */}
                   <div
@@ -538,9 +564,11 @@ export default function ListaDeTareasUI() {
                     style={{
                       border: "2px dashed #555",
                       borderRadius: "4px",
-                      height: "46px",
+                      width: "100%",
+                      height: "48px",
                       background: "rgba(255,255,255,0.02)",
                       margin: "2px 0",
+                      boxSizing: "border-box",
                     }}
                   />
                 )}
