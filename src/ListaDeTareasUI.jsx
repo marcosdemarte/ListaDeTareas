@@ -46,7 +46,6 @@ export default function ListaDeTareasUI() {
 
     await guardarTareasXML(xmlString);
 
-    // Recarga formal desde el XML tras guardar
     const xmlText = await obtenerTareasXML();
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, "application/xml");
@@ -113,7 +112,7 @@ export default function ListaDeTareasUI() {
     await sincronizarConXML(updated);
   };
 
-  // Manejadores de Drag and Drop con soporte para posición inicial y cursor de mano
+  // Manejadores de Drag and Drop permitiendo soltar incluso en la misma posición
   const handleDragStart = (e, index) => {
     draggedIndex.current = index;
     e.dataTransfer.effectAllowed = "move";
@@ -126,9 +125,7 @@ export default function ListaDeTareasUI() {
   const handleDragOver = (e, index) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    if (draggedIndex.current !== index) {
-      setOverIndex(index);
-    }
+    setOverIndex(index);
   };
 
   const handleDrop = async (e, targetIndex) => {
@@ -136,16 +133,12 @@ export default function ListaDeTareasUI() {
     if (guardando || draggedIndex.current === null) return;
 
     const sourceIndex = draggedIndex.current;
-    const sIndex = draggedIndex.current;
     draggedIndex.current = null;
     setOverIndex(null);
 
-    // Si lo suelta en su misma posición inicial, no hace nada
-    if (sIndex === targetIndex) return;
-
     const tareasFiltradas =
       filtro === "pendiente" ? tareasPendientes : tareasCompletadas;
-    const itemMovido = tareasFiltradas[sIndex];
+    const itemMovido = tareasFiltradas[sourceIndex];
     const targetItem = tareasFiltradas[targetIndex];
 
     if (!itemMovido || !targetItem) return;
@@ -154,6 +147,9 @@ export default function ListaDeTareasUI() {
     const indiceRealTarget = tareas.findIndex((t) => t.id === targetItem.id);
 
     if (indiceRealSource === -1 || indiceRealTarget === -1) return;
+
+    // Si se suelta en el mismo lugar exacto, permitimos la acción sin alterar el orden
+    if (indiceRealSource === indiceRealTarget) return;
 
     const copia = [...tareas];
     const [removido] = copia.splice(indiceRealSource, 1);
@@ -347,7 +343,7 @@ export default function ListaDeTareasUI() {
         </button>
       </div>
 
-      {/* Lista con Líneas Punteadas y Cursor Grab/Grabbing */}
+      {/* Lista con cursor grab/grabbing explícito */}
       <div
         style={{
           display: "flex",
@@ -367,24 +363,25 @@ export default function ListaDeTareasUI() {
         ) : (
           tareasFiltradas.map((t, index) => {
             const isBeingDragged = draggedIndex.current === index;
-            const isDropTarget =
-              overIndex === index && draggedIndex.current !== index;
+            const isDropTarget = overIndex === index;
 
             return (
               <React.Fragment key={t.id}>
-                {isDropTarget && draggedIndex.current > index && (
-                  <div
-                    style={{
-                      border: "2px dashed #555",
-                      borderRadius: "4px",
-                      width: "100%",
-                      height: "48px",
-                      background: "rgba(255,255,255,0.02)",
-                      margin: "2px 0",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                )}
+                {isDropTarget &&
+                  draggedIndex.current !== null &&
+                  draggedIndex.current > index && (
+                    <div
+                      style={{
+                        border: "2px dashed #555",
+                        borderRadius: "4px",
+                        width: "100%",
+                        height: "48px",
+                        background: "rgba(255,255,255,0.02)",
+                        margin: "2px 0",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  )}
 
                 <div
                   draggable={editandoId !== t.id}
@@ -412,7 +409,6 @@ export default function ListaDeTareasUI() {
                     boxSizing: "border-box",
                     width: "100%",
                   }}>
-                  {/* Número y Texto */}
                   <div
                     style={{
                       display: "flex",
@@ -469,7 +465,6 @@ export default function ListaDeTareasUI() {
                     )}
                   </div>
 
-                  {/* Botones */}
                   <div
                     style={{
                       display: "flex",
@@ -566,19 +561,21 @@ export default function ListaDeTareasUI() {
                   </div>
                 </div>
 
-                {isDropTarget && draggedIndex.current < index && (
-                  <div
-                    style={{
-                      border: "2px dashed #555",
-                      borderRadius: "4px",
-                      width: "100%",
-                      height: "48px",
-                      background: "rgba(255,255,255,0.02)",
-                      margin: "2px 0",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                )}
+                {isDropTarget &&
+                  draggedIndex.current !== null &&
+                  draggedIndex.current < index && (
+                    <div
+                      style={{
+                        border: "2px dashed #555",
+                        borderRadius: "4px",
+                        width: "100%",
+                        height: "48px",
+                        background: "rgba(255,255,255,0.02)",
+                        margin: "2px 0",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  )}
               </React.Fragment>
             );
           })
