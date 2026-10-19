@@ -12,7 +12,7 @@ async function asegurarArchivo() {
         await mkdir(dataDir, { recursive: true });
     }
     if (!fs.existsSync(filePath)) {
-        const defaultXml = `<tareas>\n</tareas>`;
+        const defaultXml = `<tareas>\n    <tarea estado="pendiente">Escribe tu primera tarea de desarrollo aquí...</tarea>\n</tareas>`;
         await writeFile(filePath, defaultXml, "utf-8");
     }
 }
