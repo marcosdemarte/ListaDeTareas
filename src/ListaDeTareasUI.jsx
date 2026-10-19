@@ -11,8 +11,9 @@ export default function ListaDeTareasUI() {
   const [textoEditado, setTextoEditado] = useState("");
   const [guardando, setGuardando] = useState(false);
 
-  // Referencias para el control del Drag and Drop
-  const draggedItemIndex = useRef(null);
+  // Estados y referencias para el Drag and Drop avanzado con líneas punteadas
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [overIndex, setOverIndex] = useState(null);
 
   useEffect(() => {
     obtenerTareasXML().then((xmlText) => {
@@ -101,27 +102,30 @@ export default function ListaDeTareasUI() {
     await sincronizarConXML(updated);
   };
 
-  // Funciones de Drag and Drop
+  // Manejadores de Drag and Drop con desplazamiento y espacio punteado
   const handleDragStart = (e, index) => {
-    draggedItemIndex.current = index;
+    setDraggedIndex(index);
     e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e, index) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    if (draggedIndex !== index) {
+      setOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setOverIndex(null);
   };
 
   const handleDrop = async (e, targetIndex) => {
     e.preventDefault();
-    if (guardando) return;
+    if (guardando || draggedIndex === null) return;
 
-    const sourceIndex = draggedItemIndex.current;
-    if (sourceIndex === null || sourceIndex === targetIndex) return;
-
-    // Obtenemos las tareas filtradas actuales
     const tareasFiltradasIds = tareas.filter((t) => t.estado === filtro);
-    const itemMovido = tareasFiltradasIds[sourceIndex];
+    const itemMovido = tareasFiltradasIds[draggedIndex];
     const targetItem = tareasFiltradasIds[targetIndex];
 
     const indiceRealSource = tareas.findIndex((t) => t.id === itemMovido.id);
@@ -131,9 +135,15 @@ export default function ListaDeTareasUI() {
     const [removido] = copia.splice(indiceRealSource, 1);
     copia.splice(indiceRealTarget, 0, removido);
 
-    draggedItemIndex.current = null;
+    setDraggedIndex(null);
+    setOverIndex(null);
     setTareas(copia);
     await sincronizarConXML(copia);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setOverIndex(null);
   };
 
   const tareasPendientes = tareas.filter((t) => t.estado === "pendiente");
@@ -151,6 +161,7 @@ export default function ListaDeTareasUI() {
         background: "#1c1c1c",
         color: "#e0e0e0",
         padding: "20px 30px",
+        paddingTop: "3.125rem",
         fontFamily: "system-ui, -apple-system, sans-serif",
         border: "1px solid #2d2d2d",
         width: "100%",
@@ -232,7 +243,7 @@ export default function ListaDeTareasUI() {
         </button>
       </form>
 
-      {/* Navegación de Filtros con Contadores en Píldora */}
+      {/* Navegación de Filtros */}
       <div
         style={{
           display: "flex",
@@ -306,7 +317,7 @@ export default function ListaDeTareasUI() {
         </button>
       </div>
 
-      {/* Lista de Tareas con Drag and Drop y Padding Bottom de 50px */}
+      {/* Lista de Tareas con Espacio Punteado de Arraste y Padding Bottom de 50px */}
       <div
         style={{
           display: "flex",
@@ -324,170 +335,214 @@ export default function ListaDeTareasUI() {
             No hay tareas en esta categoría.
           </div>
         ) : (
-          tareasFiltradas.map((t, index) => (
-            <div
-              key={t.id}
-              draggable={editandoId !== t.id} // Evita arrastrar mientras se está editando el texto
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                background: "#222222",
-                border: "1px solid #2a2a2a",
-                padding: "10px 16px",
-                borderRadius: "4px",
-                gap: "15px",
-                cursor: editandoId !== t.id ? "grab" : "default",
-              }}>
-              {/* Número y Texto */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  flex: 1,
-                }}>
-                <span
-                  style={{
-                    color: colorActivo,
-                    fontWeight: "bold",
-                    fontSize: "1.05rem",
-                    minWidth: "24px",
-                  }}>
-                  {index + 1}.
-                </span>
+          tareasFiltradas.map((t, index) => {
+            const isBeingDragged = draggedIndex === index;
+            const isDropTarget = overIndex === index && draggedIndex !== index;
 
-                {editandoId === t.id ? (
-                  <div style={{ display: "flex", gap: "8px", flex: 1 }}>
-                    <input
-                      type="text"
-                      value={textoEditado}
-                      onChange={(e) => setTextoEditado(e.target.value)}
-                      style={{
-                        flex: 1,
-                        background: "#333",
-                        color: "#fff",
-                        border: "1px solid #555",
-                        padding: "6px 10px",
-                        borderRadius: "4px",
-                        outline: "none",
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <span
+            return (
+              <React.Fragment key={t.id}>
+                {/* Indicador de espacio punteado si se está arrastrando justo antes de este ítem */}
+                {isDropTarget && draggedIndex > index && (
+                  <div
                     style={{
-                      color:
-                        t.estado === "finalizado" || t.estado === "completado"
-                          ? "#a1a1aa"
-                          : "#ffffff",
-                      fontSize: "1rem",
-                      textDecoration:
-                        t.estado === "finalizado" || t.estado === "completado"
-                          ? "line-through"
-                          : "none",
-                      flex: 1,
-                      wordBreak: "break-word",
-                    }}>
-                    {t.texto}
-                  </span>
+                      border: "2px dashed #555",
+                      borderRadius: "4px",
+                      height: "46px",
+                      background: "rgba(255,255,255,0.02)",
+                      margin: "2px 0",
+                    }}
+                  />
                 )}
-              </div>
 
-              {/* Botones de Acción */}
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <select
-                  value={t.estado === "finalizado" ? "completado" : t.estado}
-                  onChange={(e) =>
-                    cambiarEstado(
-                      t.id,
-                      e.target.value === "completado"
-                        ? "finalizado"
-                        : "pendiente",
-                    )
-                  }
+                <div
+                  draggable={editandoId !== t.id}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
                   style={{
-                    background: "#2a2a2a",
-                    color: "#e0e0e0",
-                    border: "1px solid #404040",
-                    padding: "4px 8px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    background: "#222222",
+                    border: "1px solid #2a2a2a",
+                    padding: "10px 16px",
                     borderRadius: "4px",
-                    cursor: "pointer",
-                    fontSize: "0.9rem",
+                    gap: "15px",
+                    cursor: editandoId !== t.id ? "grab" : "default",
+                    opacity: isBeingDragged ? 0.4 : 1,
+                    transition: "transform 0.2s ease, opacity 0.2s ease",
                   }}>
-                  <option value="pendiente">Pendiente</option>
-                  <option value="completado">Completado</option>
-                </select>
-
-                {editandoId === t.id ? (
-                  <>
-                    <button
-                      onClick={() => guardarModificacion(t.id)}
+                  {/* Número y Texto */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      flex: 1,
+                    }}>
+                    <span
                       style={{
-                        background: "#2563eb",
-                        color: "#fff",
-                        border: "none",
-                        padding: "5px 12px",
-                        borderRadius: "4px",
-                        cursor: "pointer",
+                        color: colorActivo,
                         fontWeight: "bold",
-                        fontSize: "0.9rem",
+                        fontSize: "1.05rem",
+                        minWidth: "24px",
                       }}>
-                      Guardar
-                    </button>
-                    <button
-                      onClick={cancelarModificacion}
+                      {index + 1}.
+                    </span>
+
+                    {editandoId === t.id ? (
+                      <div style={{ display: "flex", gap: "8px", flex: 1 }}>
+                        <input
+                          type="text"
+                          value={textoEditado}
+                          onChange={(e) => setTextoEditado(e.target.value)}
+                          style={{
+                            flex: 1,
+                            background: "#333",
+                            color: "#fff",
+                            border: "1px solid #555",
+                            padding: "6px 10px",
+                            borderRadius: "4px",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <span
+                        style={{
+                          color:
+                            t.estado === "finalizado" ||
+                            t.estado === "completado"
+                              ? "#a1a1aa"
+                              : "#ffffff",
+                          fontSize: "1rem",
+                          textDecoration:
+                            t.estado === "finalizado" ||
+                            t.estado === "completado"
+                              ? "line-through"
+                              : "none",
+                          flex: 1,
+                          wordBreak: "break-word",
+                        }}>
+                        {t.texto}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Botones de Acción */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}>
+                    <select
+                      value={
+                        t.estado === "finalizado" ? "completado" : t.estado
+                      }
+                      onChange={(e) =>
+                        cambiarEstado(
+                          t.id,
+                          e.target.value === "completado"
+                            ? "finalizado"
+                            : "pendiente",
+                        )
+                      }
                       style={{
-                        background: "transparent",
-                        color: "#a1a1aa",
-                        border: "1px solid #444",
-                        padding: "5px 10px",
+                        background: "#2a2a2a",
+                        color: "#e0e0e0",
+                        border: "1px solid #404040",
+                        padding: "4px 8px",
                         borderRadius: "4px",
                         cursor: "pointer",
                         fontSize: "0.9rem",
                       }}>
-                      Cancelar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => iniciarModificacion(t)}
-                      style={{
-                        background: "#2563eb",
-                        color: "#ffffff",
-                        border: "none",
-                        padding: "5px 12px",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "0.9rem",
-                        fontWeight: "500",
-                      }}>
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => borrarTarea(t.id)}
-                      style={{
-                        background: "#2563eb",
-                        color: "#ffffff",
-                        border: "none",
-                        padding: "5px 12px",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "0.9rem",
-                        fontWeight: "500",
-                      }}>
-                      Borrar
-                    </button>
-                  </>
+                      <option value="pendiente">Pendiente</option>
+                      <option value="completado">Completado</option>
+                    </select>
+
+                    {editandoId === t.id ? (
+                      <>
+                        <button
+                          onClick={() => guardarModificacion(t.id)}
+                          style={{
+                            background: "#2563eb",
+                            color: "#fff",
+                            border: "none",
+                            padding: "5px 12px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            fontSize: "0.9rem",
+                          }}>
+                          Guardar
+                        </button>
+                        <button
+                          onClick={cancelarModificacion}
+                          style={{
+                            background: "transparent",
+                            color: "#a1a1aa",
+                            border: "1px solid #444",
+                            padding: "5px 10px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "0.9rem",
+                          }}>
+                          Cancelar
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => iniciarModificacion(t)}
+                          style={{
+                            background: "#2563eb",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "5px 12px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "0.9rem",
+                            fontWeight: "500",
+                          }}>
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => borrarTarea(t.id)}
+                          style={{
+                            background: "#2563eb",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "5px 12px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "0.9rem",
+                            fontWeight: "500",
+                          }}>
+                          Borrar
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Indicador de espacio punteado si se está arrastrando justo después de este ítem */}
+                {isDropTarget && draggedIndex < index && (
+                  <div
+                    style={{
+                      border: "2px dashed #555",
+                      borderRadius: "4px",
+                      height: "46px",
+                      background: "rgba(255,255,255,0.02)",
+                      margin: "2px 0",
+                    }}
+                  />
                 )}
-              </div>
-            </div>
-          ))
+              </React.Fragment>
+            );
+          })
         )}
       </div>
     </div>
