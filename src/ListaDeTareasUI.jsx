@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { obtenerTareasXML, guardarTareasXML } from "./actions";
 
 export default function ListaDeTareasUI() {
@@ -10,6 +10,9 @@ export default function ListaDeTareasUI() {
   const [editandoId, setEditandoId] = useState(null);
   const [textoEditado, setTextoEditado] = useState("");
   const [guardando, setGuardando] = useState(false);
+
+  // Referencias para el control del Drag and Drop
+  const draggedItemIndex = useRef(null);
 
   useEffect(() => {
     obtenerTareasXML().then((xmlText) => {
@@ -98,20 +101,37 @@ export default function ListaDeTareasUI() {
     await sincronizarConXML(updated);
   };
 
-  const moverTarea = async (index, direccion) => {
-    if (guardando) return;
-    const tareasFiltradasIds = tareas.filter((t) => t.estado === filtro);
-    const itemAMover = tareasFiltradasIds[index];
-    const indiceReal = tareas.findIndex((t) => t.id === itemAMover.id);
+  // Funciones de Drag and Drop
+  const handleDragStart = (e, index) => {
+    draggedItemIndex.current = index;
+    e.dataTransfer.effectAllowed = "move";
+  };
 
-    const nuevoIndiceReal =
-      direccion === "arriba" ? indiceReal - 1 : indiceReal + 1;
-    if (nuevoIndiceReal < 0 || nuevoIndiceReal >= tareas.length) return;
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e, targetIndex) => {
+    e.preventDefault();
+    if (guardando) return;
+
+    const sourceIndex = draggedItemIndex.current;
+    if (sourceIndex === null || sourceIndex === targetIndex) return;
+
+    // Obtenemos las tareas filtradas actuales
+    const tareasFiltradasIds = tareas.filter((t) => t.estado === filtro);
+    const itemMovido = tareasFiltradasIds[sourceIndex];
+    const targetItem = tareasFiltradasIds[targetIndex];
+
+    const indiceRealSource = tareas.findIndex((t) => t.id === itemMovido.id);
+    const indiceRealTarget = tareas.findIndex((t) => t.id === targetItem.id);
 
     const copia = [...tareas];
-    const [removido] = copia.splice(indiceReal, 1);
-    copia.splice(nuevoIndiceReal, 0, removido);
+    const [removido] = copia.splice(indiceRealSource, 1);
+    copia.splice(indiceRealTarget, 0, removido);
 
+    draggedItemIndex.current = null;
     setTareas(copia);
     await sincronizarConXML(copia);
   };
@@ -286,7 +306,7 @@ export default function ListaDeTareasUI() {
         </button>
       </div>
 
-      {/* Lista de Tareas con Padding Bottom de 50px */}
+      {/* Lista de Tareas con Drag and Drop y Padding Bottom de 50px */}
       <div
         style={{
           display: "flex",
@@ -307,6 +327,10 @@ export default function ListaDeTareasUI() {
           tareasFiltradas.map((t, index) => (
             <div
               key={t.id}
+              draggable={editandoId !== t.id} // Evita arrastrar mientras se está editando el texto
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -316,54 +340,16 @@ export default function ListaDeTareasUI() {
                 padding: "10px 16px",
                 borderRadius: "4px",
                 gap: "15px",
+                cursor: editandoId !== t.id ? "grab" : "default",
               }}>
-              {/* Controles de ordenamiento y texto */}
+              {/* Número y Texto */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "10px",
+                  gap: "12px",
                   flex: 1,
                 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "2px",
-                    marginRight: "4px",
-                  }}>
-                  <button
-                    onClick={() => moverTarea(index, "arriba")}
-                    disabled={index === 0}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: index === 0 ? "#333" : "#888",
-                      cursor: index === 0 ? "default" : "pointer",
-                      fontSize: "10px",
-                      padding: 0,
-                    }}>
-                    ▲
-                  </button>
-                  <button
-                    onClick={() => moverTarea(index, "abajo")}
-                    disabled={index === tareasFiltradas.length - 1}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color:
-                        index === tareasFiltradas.length - 1 ? "#333" : "#888",
-                      cursor:
-                        index === tareasFiltradas.length - 1
-                          ? "default"
-                          : "pointer",
-                      fontSize: "10px",
-                      padding: 0,
-                    }}>
-                    ▼
-                  </button>
-                </div>
-
                 <span
                   style={{
                     color: colorActivo,
