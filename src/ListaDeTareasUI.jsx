@@ -46,7 +46,7 @@ export default function ListaDeTareasUI() {
 
     await guardarTareasXML(xmlString);
 
-    // Recargamos formalmente desde el XML tras guardar para sincronizar por completo
+    // Recarga formal desde el XML tras guardar
     const xmlText = await obtenerTareasXML();
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, "application/xml");
@@ -113,7 +113,7 @@ export default function ListaDeTareasUI() {
     await sincronizarConXML(updated);
   };
 
-  // Manejadores de Drag and Drop robustos
+  // Manejadores de Drag and Drop con soporte para posición inicial y cursor de mano
   const handleDragStart = (e, index) => {
     draggedIndex.current = index;
     e.dataTransfer.effectAllowed = "move";
@@ -136,14 +136,16 @@ export default function ListaDeTareasUI() {
     if (guardando || draggedIndex.current === null) return;
 
     const sourceIndex = draggedIndex.current;
+    const sIndex = draggedIndex.current;
     draggedIndex.current = null;
     setOverIndex(null);
 
-    if (sourceIndex === targetIndex) return;
+    // Si lo suelta en su misma posición inicial, no hace nada
+    if (sIndex === targetIndex) return;
 
     const tareasFiltradas =
       filtro === "pendiente" ? tareasPendientes : tareasCompletadas;
-    const itemMovido = tareasFiltradas[sourceIndex];
+    const itemMovido = tareasFiltradas[sIndex];
     const targetItem = tareasFiltradas[targetIndex];
 
     if (!itemMovido || !targetItem) return;
@@ -218,7 +220,7 @@ export default function ListaDeTareasUI() {
         Lista de Tareas
       </h2>
 
-      {/* Formulario con Textarea y Botón Centrado */}
+      {/* Formulario */}
       <form
         onSubmit={agregarTarea}
         style={{
@@ -262,7 +264,7 @@ export default function ListaDeTareasUI() {
         </button>
       </form>
 
-      {/* Navegación de Filtros Horizontal con Bordes y Píldoras Alineadas */}
+      {/* Pestañas de Filtro */}
       <div
         style={{
           display: "flex",
@@ -345,7 +347,7 @@ export default function ListaDeTareasUI() {
         </button>
       </div>
 
-      {/* Lista de Tareas con Línea Punteada Horizontal de Medidas Exactas */}
+      {/* Lista con Líneas Punteadas y Cursor Grab/Grabbing */}
       <div
         style={{
           display: "flex",
@@ -400,7 +402,12 @@ export default function ListaDeTareasUI() {
                     padding: "10px 16px",
                     borderRadius: "4px",
                     gap: "15px",
-                    cursor: editandoId !== t.id ? "grab" : "default",
+                    cursor:
+                      editandoId !== t.id
+                        ? isBeingDragged
+                          ? "grabbing"
+                          : "grab"
+                        : "default",
                     opacity: isBeingDragged ? 0.4 : 1,
                     boxSizing: "border-box",
                     width: "100%",
@@ -462,7 +469,7 @@ export default function ListaDeTareasUI() {
                     )}
                   </div>
 
-                  {/* Botones de Acción */}
+                  {/* Botones */}
                   <div
                     style={{
                       display: "flex",
