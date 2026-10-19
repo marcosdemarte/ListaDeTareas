@@ -9,6 +9,7 @@ export default function ListaDeTareasUI() {
   const [filtro, setFiltro] = useState("pendiente");
   const [editandoId, setEditandoId] = useState(null);
   const [textoEditado, setTextoEditado] = useState("");
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     obtenerTareasXML().then((xmlText) => {
@@ -28,7 +29,8 @@ export default function ListaDeTareasUI() {
     });
   }, []);
 
-  const guardarEnXML = async (updatedTareas) => {
+  const sincronizarConXML = async (updatedTareas) => {
+    setGuardando(true);
     let xmlString = "<tareas>\n";
     updatedTareas.forEach((t) => {
       const textoEscaped = t.texto
@@ -40,11 +42,12 @@ export default function ListaDeTareasUI() {
     xmlString += "</tareas>";
 
     await guardarTareasXML(xmlString);
+    setGuardando(false);
   };
 
-  const agregarTarea = (e) => {
+  const agregarTarea = async (e) => {
     e.preventDefault();
-    if (!nuevaTarea.trim()) return;
+    if (!nuevaTarea.trim() || guardando) return;
 
     const updated = [
       ...tareas,
@@ -52,21 +55,26 @@ export default function ListaDeTareasUI() {
     ];
     setTareas(updated);
     setNuevaTarea("");
-    guardarEnXML(updated);
+    await sincronizarConXML(updated);
   };
 
-  const cambiarEstado = (id, nuevoEstado) => {
+  const cambiarEstado = async (id, nuevoEstado) => {
+    if (guardando) return;
     const updated = tareas.map((t) =>
       t.id === id ? { ...t, estado: nuevoEstado } : t,
     );
     setTareas(updated);
-    guardarEnXML(updated);
+    await sincronizarConXML(updated);
   };
 
-  const borrarTarea = (id) => {
+  const borrarTarea = async (id) => {
+    if (guardando) return;
+    const confirmado = window.confirm("¿Está seguro que desea borrar?");
+    if (!confirmado) return;
+
     const updated = tareas.filter((t) => t.id !== id);
     setTareas(updated);
-    guardarEnXML(updated);
+    await sincronizarConXML(updated);
   };
 
   const iniciarModificacion = (t) => {
@@ -74,14 +82,38 @@ export default function ListaDeTareasUI() {
     setTextoEditado(t.texto);
   };
 
-  const guardarModificacion = (id) => {
+  const cancelarModificacion = () => {
+    setEditandoId(null);
+    setTextoEditado("");
+  };
+
+  const guardarModificacion = async (id) => {
+    if (guardando) return;
     const updated = tareas.map((t) =>
       t.id === id ? { ...t, texto: textoEditado.trim() } : t,
     );
     setTareas(updated);
     setEditandoId(null);
     setTextoEditado("");
-    guardarEnXML(updated);
+    await sincronizarConXML(updated);
+  };
+
+  const moverTarea = async (index, direccion) => {
+    if (guardando) return;
+    const tareasFiltradasIds = tareas.filter((t) => t.estado === filtro);
+    const itemAMover = tareasFiltradasIds[index];
+    const indiceReal = tareas.findIndex((t) => t.id === itemAMover.id);
+
+    const nuevoIndiceReal =
+      direccion === "arriba" ? indiceReal - 1 : indiceReal + 1;
+    if (nuevoIndiceReal < 0 || nuevoIndiceReal >= tareas.length) return;
+
+    const copia = [...tareas];
+    const [removido] = copia.splice(indiceReal, 1);
+    copia.splice(nuevoIndiceReal, 0, removido);
+
+    setTareas(copia);
+    await sincronizarConXML(copia);
   };
 
   const tareasPendientes = tareas.filter((t) => t.estado === "pendiente");
@@ -90,6 +122,8 @@ export default function ListaDeTareasUI() {
   );
   const tareasFiltradas =
     filtro === "pendiente" ? tareasPendientes : tareasCompletadas;
+
+  const colorActivo = filtro === "pendiente" ? "#ef4444" : "#4ade80";
 
   return (
     <div
@@ -101,7 +135,27 @@ export default function ListaDeTareasUI() {
         border: "1px solid #2d2d2d",
         width: "100%",
         boxSizing: "border-box",
+        opacity: guardando ? 0.7 : 1,
+        pointerEvents: guardando ? "none" : "auto",
+        position: "relative",
       }}>
+      {guardando && (
+        <div
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 15,
+            background: "#333",
+            color: "#fff",
+            padding: "4px 10px",
+            borderRadius: "4px",
+            fontSize: "0.8rem",
+            zIndex: 10,
+          }}>
+          Guardando cambios...
+        </div>
+      )}
+
       <h2
         style={{
           textAlign: "center",
@@ -158,7 +212,7 @@ export default function ListaDeTareasUI() {
         </button>
       </form>
 
-      {/* Navegación de Filtros */}
+      {/* Navegación de Filtros con Contadores en Píldora */}
       <div
         style={{
           display: "flex",
@@ -176,7 +230,7 @@ export default function ListaDeTareasUI() {
               filtro === "pendiente"
                 ? "2px solid #ef4444"
                 : "2px solid transparent",
-            color: filtro === "pendiente" ? "#ef4444" : "#a1a1aa",
+            color: filtro === "pendiente" ? "#ef4444" : "#71717a",
             fontWeight: "bold",
             cursor: "pointer",
             display: "flex",
@@ -188,9 +242,9 @@ export default function ListaDeTareasUI() {
           Pendientes
           <span
             style={{
-              background: "#ef4444",
+              background: filtro === "pendiente" ? "#ef4444" : "#3f3f46",
               color: "#fff",
-              padding: "2px 8px",
+              padding: "2px 10px",
               borderRadius: "12px",
               fontSize: "0.8rem",
             }}>
@@ -206,9 +260,9 @@ export default function ListaDeTareasUI() {
             border: "none",
             borderBottom:
               filtro === "finalizado"
-                ? "2px solid #3b82f6"
+                ? "2px solid #4ade80"
                 : "2px solid transparent",
-            color: filtro === "finalizado" ? "#3b82f6" : "#a1a1aa",
+            color: filtro === "finalizado" ? "#4ade80" : "#71717a",
             fontWeight: "bold",
             cursor: "pointer",
             display: "flex",
@@ -220,19 +274,26 @@ export default function ListaDeTareasUI() {
           Completados
           <span
             style={{
-              background: "#52525b",
-              color: "#d4d4d8",
-              padding: "2px 8px",
+              background: filtro === "finalizado" ? "#4ade80" : "#3f3f46",
+              color: filtro === "finalizado" ? "#000" : "#fff",
+              padding: "2px 10px",
               borderRadius: "12px",
               fontSize: "0.8rem",
+              fontWeight: "bold",
             }}>
             {tareasCompletadas.length}
           </span>
         </button>
       </div>
 
-      {/* Lista de Tareas */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      {/* Lista de Tareas con Padding Bottom de 50px */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+          paddingBottom: "50px",
+        }}>
         {tareasFiltradas.length === 0 ? (
           <div
             style={{
@@ -256,19 +317,59 @@ export default function ListaDeTareasUI() {
                 borderRadius: "4px",
                 gap: "15px",
               }}>
-              {/* Número y Texto */}
+              {/* Controles de ordenamiento y texto */}
               <div
                 style={{
                   display: "flex",
-                  alignItems: "baseline",
+                  alignItems: "center",
                   gap: "10px",
                   flex: 1,
                 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "2px",
+                    marginRight: "4px",
+                  }}>
+                  <button
+                    onClick={() => moverTarea(index, "arriba")}
+                    disabled={index === 0}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: index === 0 ? "#333" : "#888",
+                      cursor: index === 0 ? "default" : "pointer",
+                      fontSize: "10px",
+                      padding: 0,
+                    }}>
+                    ▲
+                  </button>
+                  <button
+                    onClick={() => moverTarea(index, "abajo")}
+                    disabled={index === tareasFiltradas.length - 1}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color:
+                        index === tareasFiltradas.length - 1 ? "#333" : "#888",
+                      cursor:
+                        index === tareasFiltradas.length - 1
+                          ? "default"
+                          : "pointer",
+                      fontSize: "10px",
+                      padding: 0,
+                    }}>
+                    ▼
+                  </button>
+                </div>
+
                 <span
                   style={{
-                    color: "#ef4444",
+                    color: colorActivo,
                     fontWeight: "bold",
                     fontSize: "1.05rem",
+                    minWidth: "24px",
                   }}>
                   {index + 1}.
                 </span>
@@ -284,22 +385,11 @@ export default function ListaDeTareasUI() {
                         background: "#333",
                         color: "#fff",
                         border: "1px solid #555",
-                        padding: "4px 8px",
+                        padding: "6px 10px",
                         borderRadius: "4px",
+                        outline: "none",
                       }}
                     />
-                    <button
-                      onClick={() => guardarModificacion(t.id)}
-                      style={{
-                        background: "#16a34a",
-                        color: "#fff",
-                        border: "none",
-                        padding: "4px 10px",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}>
-                      OK
-                    </button>
                   </div>
                 ) : (
                   <span
@@ -313,13 +403,15 @@ export default function ListaDeTareasUI() {
                         t.estado === "finalizado" || t.estado === "completado"
                           ? "line-through"
                           : "none",
+                      flex: 1,
+                      wordBreak: "break-word",
                     }}>
                     {t.texto}
                   </span>
                 )}
               </div>
 
-              {/* Select & Botones de Acción */}
+              {/* Botones de Acción */}
               <div
                 style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <select
@@ -345,34 +437,67 @@ export default function ListaDeTareasUI() {
                   <option value="completado">Completado</option>
                 </select>
 
-                <button
-                  onClick={() => borrarTarea(t.id)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#a1a1aa",
-                    cursor: "pointer",
-                    fontSize: "0.9rem",
-                  }}
-                  onMouseOver={(e) => (e.target.style.color = "#ef4444")}
-                  onMouseOut={(e) => (e.target.style.color = "#a1a1aa")}>
-                  Borrar
-                </button>
-
-                {editandoId !== t.id && (
-                  <button
-                    onClick={() => iniciarModificacion(t)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "#a1a1aa",
-                      cursor: "pointer",
-                      fontSize: "0.9rem",
-                    }}
-                    onMouseOver={(e) => (e.target.style.color = "#ffffff")}
-                    onMouseOut={(e) => (e.target.style.color = "#a1a1aa")}>
-                    Modificar
-                  </button>
+                {editandoId === t.id ? (
+                  <>
+                    <button
+                      onClick={() => guardarModificacion(t.id)}
+                      style={{
+                        background: "#2563eb",
+                        color: "#fff",
+                        border: "none",
+                        padding: "5px 12px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                        fontSize: "0.9rem",
+                      }}>
+                      Guardar
+                    </button>
+                    <button
+                      onClick={cancelarModificacion}
+                      style={{
+                        background: "transparent",
+                        color: "#a1a1aa",
+                        border: "1px solid #444",
+                        padding: "5px 10px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "0.9rem",
+                      }}>
+                      Cancelar
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => iniciarModificacion(t)}
+                      style={{
+                        background: "#2563eb",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "5px 12px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "0.9rem",
+                        fontWeight: "500",
+                      }}>
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => borrarTarea(t.id)}
+                      style={{
+                        background: "#2563eb",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "5px 12px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "0.9rem",
+                        fontWeight: "500",
+                      }}>
+                      Borrar
+                    </button>
+                  </>
                 )}
               </div>
             </div>
