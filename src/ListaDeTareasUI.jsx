@@ -296,24 +296,21 @@ export default function ListaDeTareasUI() {
         onPointerDown={
           fantasma ? undefined : (e) => iniciarPresion(e, t, index)
         }
-        style={style}
-      >
+        style={style}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: "12px",
             flex: 1,
-          }}
-        >
+          }}>
           <span
             style={{
               color: colorActivo,
               fontWeight: "bold",
               fontSize: "1.05rem",
               minWidth: "24px",
-            }}
-          >
+            }}>
             {numero}.
           </span>
 
@@ -348,8 +345,7 @@ export default function ListaDeTareasUI() {
                     : "none",
                 flex: 1,
                 wordBreak: "break-word",
-              }}
-            >
+              }}>
               {t.texto}
             </span>
           )}
@@ -360,8 +356,7 @@ export default function ListaDeTareasUI() {
             display: "flex",
             alignItems: "center",
             gap: "12px",
-          }}
-        >
+          }}>
           <select
             value={t.estado === "finalizado" ? "completado" : t.estado}
             onChange={(e) =>
@@ -378,8 +373,7 @@ export default function ListaDeTareasUI() {
               borderRadius: "4px",
               cursor: "pointer",
               fontSize: "0.9rem",
-            }}
-          >
+            }}>
             <option value="pendiente">Pendiente</option>
             <option value="completado">Completado</option>
           </select>
@@ -397,8 +391,7 @@ export default function ListaDeTareasUI() {
                   cursor: "pointer",
                   fontWeight: "bold",
                   fontSize: "0.9rem",
-                }}
-              >
+                }}>
                 Guardar
               </button>
               <button
@@ -411,8 +404,7 @@ export default function ListaDeTareasUI() {
                   borderRadius: "4px",
                   cursor: "pointer",
                   fontSize: "0.9rem",
-                }}
-              >
+                }}>
                 Cancelar
               </button>
             </>
@@ -429,8 +421,7 @@ export default function ListaDeTareasUI() {
                   cursor: "pointer",
                   fontSize: "0.9rem",
                   fontWeight: "500",
-                }}
-              >
+                }}>
                 Editar
               </button>
               <button
@@ -444,8 +435,7 @@ export default function ListaDeTareasUI() {
                   cursor: "pointer",
                   fontSize: "0.9rem",
                   fontWeight: "500",
-                }}
-              >
+                }}>
                 Borrar
               </button>
             </>
@@ -494,6 +484,7 @@ export default function ListaDeTareasUI() {
 
   return (
     <div
+      className="panel-admin"
       style={{
         background: "#1c1c1c",
         color: "#e0e0e0",
@@ -506,8 +497,14 @@ export default function ListaDeTareasUI() {
         opacity: guardando ? 0.7 : 1,
         pointerEvents: guardando ? "none" : "auto",
         position: "relative",
-      }}
-    >
+      }}>
+      <style>{`
+      @media (max-width: 1023px) {
+        .panel-admin {
+          display: none !important;
+        }
+      }
+    `}</style>
       {arrastre && (
         <style>{`* { cursor: grabbing !important; user-select: none !important; }`}</style>
       )}
@@ -525,8 +522,7 @@ export default function ListaDeTareasUI() {
             borderRadius: "4px",
             fontSize: "0.85rem",
             zIndex: 10,
-          }}
-        >
+          }}>
           {errorGuardado}
         </div>
       )}
@@ -543,8 +539,7 @@ export default function ListaDeTareasUI() {
             borderRadius: "4px",
             fontSize: "0.8rem",
             zIndex: 10,
-          }}
-        >
+          }}>
           Guardando cambios en XML...
         </div>
       )}
@@ -557,8 +552,7 @@ export default function ListaDeTareasUI() {
           fontWeight: "bold",
           marginTop: 0,
           marginBottom: "20px",
-        }}
-      >
+        }}>
         Lista de Tareas
       </h2>
 
@@ -571,8 +565,7 @@ export default function ListaDeTareasUI() {
           alignItems: "center",
           gap: "15px",
           marginBottom: "25px",
-        }}
-      >
+        }}>
         <textarea
           value={nuevaTarea}
           onChange={(e) => setNuevaTarea(e.target.value)}
@@ -602,8 +595,7 @@ export default function ListaDeTareasUI() {
             cursor: "pointer",
             fontWeight: "bold",
             fontSize: "1rem",
-          }}
-        >
+          }}>
           Agregar
         </button>
       </form>
@@ -615,8 +607,7 @@ export default function ListaDeTareasUI() {
           borderBottom: "1px solid #333333",
           marginBottom: "15px",
           width: "100%",
-        }}
-      >
+        }}>
         <button
           onClick={() => setFiltro("pendiente")}
           style={{
@@ -638,8 +629,7 @@ export default function ListaDeTareasUI() {
             gap: "10px",
             fontSize: "1rem",
             boxSizing: "border-box",
-          }}
-        >
+          }}>
           <span>Pendientes</span>
           <span
             style={{
@@ -650,8 +640,7 @@ export default function ListaDeTareasUI() {
               fontSize: "0.8rem",
               display: "inline-block",
               lineHeight: "normal",
-            }}
-          >
+            }}>
             {tareasPendientes.length}
           </span>
         </button>
@@ -676,8 +665,7 @@ export default function ListaDeTareasUI() {
             gap: "10px",
             fontSize: "1rem",
             boxSizing: "border-box",
-          }}
-        >
+          }}>
           <span>Completados</span>
           <span
             style={{
@@ -689,8 +677,7 @@ export default function ListaDeTareasUI() {
               fontWeight: "bold",
               display: "inline-block",
               lineHeight: "normal",
-            }}
-          >
+            }}>
             {tareasCompletadas.length}
           </span>
         </button>
@@ -703,16 +690,14 @@ export default function ListaDeTareasUI() {
           flexDirection: "column",
           gap: "8px",
           paddingBottom: "50px",
-        }}
-      >
+        }}>
         {tareasFiltradas.length === 0 ? (
           <div
             style={{
               textAlign: "center",
               color: "#71717a",
               padding: "20px 0",
-            }}
-          >
+            }}>
             No hay tareas en esta categoría.
           </div>
         ) : (
